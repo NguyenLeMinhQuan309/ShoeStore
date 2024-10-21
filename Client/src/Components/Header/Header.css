@@ -1,0 +1,93 @@
+/* Basic reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+}
+
+/* Header styling */
+.header {
+  background-color: #322a2a; /* Dark background color */
+  color: #fff; /* White text color */
+  padding: 20px 10px; /* Spacing inside the .header
+ */
+  display: flex;
+  justify-content: space-between; /* Space between items */
+  align-items: center; /* Vertically center items */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow */
+  top: 0;
+  left: 0;
+  position: fixed;
+  width: 100%;
+  transition: top 0.3s;
+  z-index: 1000;
+}
+
+/* Logo styling */
+.header .logo {
+  font-size: 24px;
+  font-weight: bold;
+  background-image: linear-gradient(
+    to right,
+    red,
+    orange,
+    yellow,
+    green,
+    blue,
+    indigo,
+    violet
+  );
+  -webkit-background-clip: text; /* Chỉ giữ lại màu nền cho chữ */
+  color: transparent; /* Tạo màu chữ trong suốt */
+}
+
+/* Navigation menu styling */
+.header nav ul {
+  list-style: none;
+  display: flex;
+  margin-left: 10px;
+}
+
+.header nav ul li {
+  margin: 0 5px;
+}
+
+.header nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  font-size: 16px;
+  transition: color 0.3s;
+}
+
+.header nav ul li a:hover {
+  color: #ddd; /* Slight color change on hover */
+}
+
+.header Input {
+  min-width: 50px;
+  max-width: 50%;
+  width: 10%;
+  margin-right: auto;
+  margin-left: auto;
+  border-radius: 20px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .header nav ul {
+    flex-direction: column;
+  }
+
+  .header nav ul li {
+    margin: 10px 0;
+  }
+}

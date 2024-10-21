@@ -1,0 +1,45 @@
+/* .product-area {
+  flex-grow: 1;
+  padding: 20px;
+  margin-left: 10px;
+  background-color: #f4f4f4;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+} */
+.product-area {
+  display: flex;
+  flex-wrap: wrap; /* Cho phép các sản phẩm xuống hàng */
+  flex-grow: 1; /* Cho phép khu vực sản phẩm mở rộng */
+  align-items: center;
+  padding: 20px;
+  margin-left: 10px;
+  background-color: white;
+  border-top-right-radius: 20px;
+  border-bottom-right-radius: 20px;
+  justify-content: center;
+}
+.product-area .product {
+  display: grid; /* Biến khu vực sản phẩm thành flex container */
+  grid-template-columns: repeat(4, 1fr); /* 4 sản phẩm mỗi hàng */
+  grid-gap: 10px; /* Khoảng cách giữa các sản phẩm */
+  background-color: white;
+}
+.pagination {
+  display: flex; /* Use flexbox for pagination */
+  justify-content: center; /* Center horizontally */
+  margin-top: 20px; /* Space above pagination */
+  width: 100%; /* Full width of the container */
+  align-self: flex-end; /* Align pagination to the bottom */
+}
+.pagination button {
+  font-size: 10px;
+  height: 15px;
+  width: 15px;
+  border-radius: 5px;
+}
+.pagination button.active {
+  background-color: #322a2a; /* Highlight color */
+  color: white; /* Text color */
+  font-weight: bold; /* Make the text bold */
+  border: 1px solid #322a2a; /* Optional: border styling */
+}

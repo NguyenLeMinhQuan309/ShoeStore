@@ -1,0 +1,21 @@
+.navbar {
+  border-top-left-radius: 20px;
+  border-bottom-left-radius: 20px;
+  width: 300px;
+  background-color: #ebebeb;
+  padding: 20px;
+  min-height: 800px;
+  min-width: 300px;
+}
+/* .navbar button {
+  height: 28px;
+  border-radius: 10px;
+}
+.navbar ul {
+  display: flex;d
+}
+.navbar li {
+  font-size: 15px;
+  margin: 5px 5px;
+  list-style-type: none;
+} */

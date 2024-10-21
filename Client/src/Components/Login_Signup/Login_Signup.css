@@ -1,0 +1,42 @@
+.cart-login {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.cart-login Button {
+  width: 100px;
+  margin-right: 1px;
+  margin-left: auto;
+  border-radius: 20px;
+}
+.carticon {
+  font-size: 36px;
+  margin-right: 10px;
+}
+/* Header.css */
+.user-info {
+  display: flex;
+  align-items: center;
+}
+.username {
+  margin-right: 10px;
+}
+.user-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  margin-right: 10px;
+}
+.propdown {
+  display: flex; /* Sử dụng Flexbox */
+  flex-direction: column; /* Đặt hướng là cột */
+  gap: 10px; /* Khoảng cách giữa các nút (có thể điều chỉnh) */
+  align-items: flex-start; /* Căn chỉnh các nút về bên trái */
+}
+
+/* Tuỳ chọn: Bạn có thể thêm kiểu cho nút nếu cần */
+.propdown button {
+  width: 100%; /* Đặt chiều rộng nút bằng 100% (tùy chọn) */
+  text-align: left; /* Căn chỉnh nội dung nút */
+  color: black;
+}

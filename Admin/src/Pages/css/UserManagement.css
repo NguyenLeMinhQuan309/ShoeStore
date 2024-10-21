@@ -1,0 +1,31 @@
+/* UserManagement.css */
+
+.user-management-container {
+  padding: 20px;
+}
+
+.user-management-title {
+  margin-bottom: 20px;
+}
+
+.user-management-add-button {
+  margin-bottom: 20px;
+}
+
+.user-management-avatar {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+}
+
+.user-management-table {
+  margin-top: 20px;
+}
+
+.user-management-modal {
+  width: 100%;
+}
+
+.user-management-form-item {
+  margin-bottom: 16px;
+}

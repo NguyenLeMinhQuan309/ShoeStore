@@ -1,0 +1,19 @@
+.main {
+  margin-top: 64px;
+  border-radius: 30px;
+  flex: 1;
+  min-height: 800px;
+}
+.component {
+  margin-bottom: 30px; /* Tạo khoảng cách 30px giữa các component */
+}
+.product {
+  padding: 10px;
+  background-color: rgb(205, 215, 218);
+  border-radius: 20px;
+  min-height: 500px;
+}
+.container {
+  display: flex;
+  padding: 20px 48px;
+}

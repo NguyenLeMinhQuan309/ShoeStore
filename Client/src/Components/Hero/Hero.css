@@ -1,0 +1,32 @@
+.hero {
+  display: flex; /* Sử dụng flexbox để căn giữa nội dung */
+  justify-content: center; /* Căn giữa theo chiều ngang */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  width: 100%; /* Chiều rộng 100% */
+  overflow: hidden; /* Giấu nội dung vượt quá */
+  position: relative;
+}
+
+.hero img {
+  min-width: 100%; /* Đảm bảo hình ảnh không vượt quá chiều rộng của div */
+  height: 650px; /* Giữ tỷ lệ hình ảnh */
+}
+.hero-button {
+  position: absolute; /* Đặt button ở vị trí tuyệt đối */
+  top: 80%; /* Đặt button ở giữa theo chiều dọc */
+  left: 15%; /* Đặt button ở giữa theo chiều ngang */
+  transform: translate(-50%, -50%); /* Đưa button về giữa */
+  padding: 10px 20px; /* Thêm khoảng đệm cho button */
+  background-color: #007bff; /* Màu nền của button */
+  color: white; /* Màu chữ của button */
+  border: none; /* Không có viền */
+  border-radius: 30px; /* Bo góc button */
+  cursor: pointer; /* Đổi con trỏ khi hover */
+  font-size: 30px;
+  color: black;
+  background-color: #efebea;
+}
+
+.hero-button:hover {
+  background-color: #0056b3; /* Thay đổi màu khi hover */
+}

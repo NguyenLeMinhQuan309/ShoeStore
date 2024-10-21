@@ -1,0 +1,40 @@
+/* ProductManagement.css */
+
+.product-management-container {
+  padding: 20px;
+}
+
+.product-management-title {
+  margin-bottom: 20px;
+}
+
+.product-management-add-button {
+  margin-bottom: 20px;
+}
+
+.product-management-image {
+  width: 80px;
+  height: 80px;
+  object-fit: cover;
+}
+
+.product-management-table {
+  margin-top: 20px;
+}
+
+.product-management-modal {
+  width: 100%;
+}
+
+.product-management-form-item {
+  margin-bottom: 16px;
+}
+
+.product-management-description {
+  min-height: 100px;
+}
+
+.product-management-price {
+  font-weight: bold;
+  color: #1890ff;
+}

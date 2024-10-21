@@ -1,0 +1,66 @@
+/* Footer styling */
+.footer {
+  background-color: #322a2a; /* Dark background color */
+  color: #fff; /* White text color */
+  padding: 20px 10px; /* Spacing inside the .footer */
+  text-align: center; /* Centered text */
+  position: relative; /* Allows the use of absolute positioning within the .footer */
+  bottom: 0;
+  width: 100%;
+  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.2); /* Adds a subtle shadow */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* Links in the .footer */
+.footer a {
+  color: #fff;
+  text-decoration: none;
+  margin: 0 10px;
+  font-size: 14px;
+  transition: color 0.3s;
+}
+
+.footer a:hover {
+  color: #ddd; /* Slight color change on hover */
+}
+
+/* .footer social icons */
+.footer .social-icons {
+  margin-top: 10px;
+}
+
+.footer .social-icons a {
+  margin: 0 10px;
+  display: inline-block;
+  color: #fff;
+  font-size: 18px;
+}
+
+.footer .social-icons a:hover {
+  color: #ddd; /* Slight color change on hover */
+}
+
+/* .footer small print */
+.footer p {
+  margin-top: 15px;
+  font-size: 12px;
+  color: #aaa; /* Lighter color for small print */
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .footer {
+    padding: 15px 5px;
+  }
+
+  .footer a {
+    margin: 5px;
+    font-size: 12px;
+  }
+
+  .footer p {
+    font-size: 10px;
+  }
+}
