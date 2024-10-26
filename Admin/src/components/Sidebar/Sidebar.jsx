@@ -55,8 +55,8 @@ const Sidebar = ({ collapsed }) => {
       key: "5",
       icon: <SettingOutlined style={{ color: "#000" }} />,
       label: (
-        <Link to="/status" style={{ color: "#000" }}>
-          Trạng thái đơn hàng
+        <Link to="/statistics" style={{ color: "#000" }}>
+          Thống kê doanh thu
         </Link>
       ),
     },

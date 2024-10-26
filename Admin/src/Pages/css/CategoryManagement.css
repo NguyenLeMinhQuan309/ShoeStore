@@ -1,0 +1,26 @@
+.category-management-container {
+  padding: 20px;
+  background-color: white; /* White background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.category-management-title {
+  margin-bottom: 20px;
+}
+
+.category-management-add-button {
+  margin-bottom: 20px;
+}
+
+.category-management-table {
+  margin-top: 20px;
+}
+
+.category-management-modal {
+  width: 100%;
+}
+
+.category-management-form-item {
+  margin-bottom: 16px;
+}

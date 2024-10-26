@@ -7,12 +7,12 @@ import Product from "./Pages/Product";
 import Footer from "./Components/Footer/Footer";
 import Description from "./Pages/Description";
 import Cart from "./Pages/Cart";
-import UserInfo from "./Pages/UserInfo";
 import ShoesPage from "./Pages/ShoesPage"; // Rename to ShoesPage for clarity
 
 function App() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null); // Add error state
 
   // Fetch products from the API
   useEffect(() => {
@@ -22,6 +22,7 @@ function App() {
         setProducts(response.data); // Assume the API returns an array of products
       } catch (error) {
         console.error("Error fetching products:", error);
+        setError("Failed to fetch products. Please try again later."); // Set error message
       } finally {
         setLoading(false);
       }
@@ -32,6 +33,10 @@ function App() {
 
   if (loading) {
     return <div>Loading...</div>; // Add a loading state while products are being fetched
+  }
+
+  if (error) {
+    return <div>{error}</div>; // Display error message if any
   }
 
   return (
@@ -47,7 +52,6 @@ function App() {
           />
           <Route path="/description" element={<Description />} />
           <Route path="/cart" element={<Cart />} />
-          <Route path="/user-information" element={<UserInfo />} />
         </Routes>
         <Footer />
       </BrowserRouter>

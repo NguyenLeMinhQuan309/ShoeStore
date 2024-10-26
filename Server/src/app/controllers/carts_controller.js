@@ -21,7 +21,7 @@ class cartController {
   async getall(req, res) {
     try {
       const cart = await Cart.find({ email: req.body.email });
-      console.log("All Cart Fetched");
+      // console.log("All Cart Fetched");
       res.send(cart);
     } catch (error) {
       res.status(500).send(error);
@@ -89,9 +89,9 @@ class cartController {
   }
 
   async remove(req, res) {
-    const { id } = req.body;
+    const { email } = req.body;
     try {
-      await Cart.deleteOne({ id });
+      await Cart.deleteMany({ email });
       res.status(200).send("Sản phẩm đã được xóa");
     } catch (error) {
       res.status(500).send("Có lỗi xảy ra");

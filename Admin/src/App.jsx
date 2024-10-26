@@ -4,7 +4,9 @@ import { Layout } from "antd";
 import Sidebar from "./components/Sidebar/Sidebar";
 import UserManagement from "./Pages/UserManagement";
 import ProductManagement from "./Pages/ProductManagement";
-
+import CategoryManagement from "./Pages/CategoryManagement";
+import OrderManagement from "./Pages/OrderManagement";
+import StatisticsProductPage from "./Pages/StatistiscManagement";
 const App = () => {
   const [collapsed, setCollapsed] = useState(true);
 
@@ -29,6 +31,9 @@ const App = () => {
             <Routes>
               <Route path="/user" element={<UserManagement />} />
               <Route path="/product" element={<ProductManagement />} />
+              <Route path="/category" element={<CategoryManagement />} />
+              <Route path="/order" element={<OrderManagement />} />
+              <Route path="/statistics" element={<StatisticsProductPage />} />
               {/* Thêm các route khác nếu cần */}
             </Routes>
           </Layout.Content>

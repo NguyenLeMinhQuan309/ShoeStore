@@ -8,23 +8,48 @@ const Navbar = ({
   brands,
   categories,
   colors,
+  sizes,
   onFilterChange,
+  onBrandChange,
+  onColorChange,
+  onSizeChange,
   onSortChange,
 }) => {
-  const [checkedCategories, setCheckedCategories] = useState({
+  const [checkedFilters, setCheckedFilters] = useState({
     brands: [],
     categories: [],
     colors: [],
+    sizes: [],
   });
 
-  // Handle checkbox change
-  const handleCheckboxChange = (categoryType, checkedValues) => {
-    setCheckedCategories((prevState) => {
+  // Handle checkbox change for brands, categories, colors, and sizes
+  const handleCheckboxChange = (type, checkedValues) => {
+    const uniqueCheckedValues = [...new Set(checkedValues)];
+
+    setCheckedFilters((prevState) => {
       const updatedState = {
         ...prevState,
-        [categoryType]: checkedValues,
+        [type]: uniqueCheckedValues,
       };
-      onFilterChange(updatedState); // Call onFilterChange with updated state
+
+      // Call the corresponding handler based on the type of category being changed
+      switch (type) {
+        case "brands":
+          onBrandChange(uniqueCheckedValues);
+          break;
+        case "categories":
+          onFilterChange(uniqueCheckedValues);
+          break;
+        case "colors":
+          onColorChange(uniqueCheckedValues);
+          break;
+        case "sizes":
+          onSizeChange(uniqueCheckedValues);
+          break;
+        default:
+          break;
+      }
+
       return updatedState;
     });
   };
@@ -43,7 +68,7 @@ const Navbar = ({
           <h4>Brands</h4>
           <Checkbox.Group
             options={brands.map((brand) => ({ label: brand, value: brand }))}
-            value={checkedCategories.brands}
+            value={checkedFilters.brands}
             onChange={(checkedValues) =>
               handleCheckboxChange("brands", checkedValues)
             }
@@ -53,11 +78,11 @@ const Navbar = ({
         <Col span={24}>
           <h4>Shoe Types</h4>
           <Checkbox.Group
-            options={categories.map((type) => ({
-              label: type.display,
-              value: type.value,
+            options={categories.map((category) => ({
+              label: category.name,
+              value: category.id,
             }))}
-            value={checkedCategories.categories}
+            value={checkedFilters.categories}
             onChange={(checkedValues) =>
               handleCheckboxChange("categories", checkedValues)
             }
@@ -68,9 +93,20 @@ const Navbar = ({
           <h4>Colors</h4>
           <Checkbox.Group
             options={colors.map((color) => ({ label: color, value: color }))}
-            value={checkedCategories.colors}
+            value={checkedFilters.colors}
             onChange={(checkedValues) =>
               handleCheckboxChange("colors", checkedValues)
+            }
+          />
+        </Col>
+
+        <Col span={24}>
+          <h4>Sizes</h4>
+          <Checkbox.Group
+            options={sizes.map((size) => ({ label: size, value: size }))}
+            value={checkedFilters.sizes}
+            onChange={(checkedValues) =>
+              handleCheckboxChange("sizes", checkedValues)
             }
           />
         </Col>

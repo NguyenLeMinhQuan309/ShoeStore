@@ -10,6 +10,7 @@ import {
 } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
+import axios from "axios"; // Import axios
 
 const { Option } = Select;
 
@@ -19,6 +20,38 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
       ? newProduct.images
       : [{ imageUrls: [], color: "" }]
   );
+
+  const [categories, setCategories] = useState([]); // State for categories
+  const [brands, setBrands] = useState([]); // State for brands
+
+  useEffect(() => {
+    // Fetch categories from the API
+    const fetchCategories = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/category/getAll"
+        );
+        setCategories(response.data); // Set the fetched categories
+      } catch (error) {
+        console.error("There was an error fetching categories!", error);
+      }
+    };
+
+    // Fetch brands from the API
+    const fetchBrands = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3000/brand/getAll" // Adjust the endpoint as needed
+        );
+        setBrands(response.data); // Set the fetched brands
+      } catch (error) {
+        console.error("There was an error fetching brands!", error);
+      }
+    };
+
+    fetchCategories();
+    fetchBrands(); // Call the fetchBrands function
+  }, []);
 
   useEffect(() => {
     setImageInputs(
@@ -31,24 +64,19 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
   const handleImageChange = (index, fileList) => {
     const updatedImages = [...imageInputs];
 
-    // Update imageUrls for the current index
     updatedImages[index].imageUrls = fileList.map((file) => ({
       uid: file.uid,
       name: file.name,
-      status: file.status || "done", // Ensure status is set to "done" or default
-      url: file.url, // Use the blob URL for display purposes
-      originFileObj: file.originFileObj, // Keep the original file object if it exists
+      status: file.status || "done",
+      url: file.url,
+      originFileObj: file.originFileObj,
     }));
 
     setImageInputs(updatedImages);
-
-    // Update newProduct.images to reflect the latest image inputs
     setNewProduct((prevState) => ({
       ...prevState,
       images: updatedImages,
     }));
-
-    console.log(updatedImages); // Log the updated images to verify structure
   };
 
   const handleColorChange = (index, value) => {
@@ -70,6 +98,7 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
       images: [...prevState.images, newImageInput],
     }));
   };
+
   return (
     <Form layout="vertical">
       <Row gutter={16}>
@@ -92,46 +121,37 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
             rules={[{ required: true, message: "Please select a category" }]}
           >
             <Select
-              mode="multiple"
               value={newProduct.category}
               onChange={(value) => {
                 setNewProduct({ ...newProduct, category: value });
               }}
             >
-              <Option value="depquaingang">Dép quai ngang</Option>
-              <Option value="depxongon">Dép xỏ ngón</Option>
-              <Option value="giaybongro">Giày bóng rỗ</Option>
-              <Option value="giaychaybo">Giày chạy bộ</Option>
-              <Option value="giaydabong">Giày đá bóng</Option>
-              <Option value="giaydibo">Giày đi bộ</Option>
-              <Option value="giaysandal">Giày sandal</Option>
-              <Option value="giaysneakers">Giày sneakers</Option>
+              {categories.map((category) => (
+                <Option key={category.id} value={category.id}>
+                  {category.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
         </Col>
       </Row>
-
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
             label="Brand"
-            rules={[{ required: true, message: "Please enter a brand" }]}
+            rules={[{ required: true, message: "Please select a brand" }]}
           >
             <Select
-              mode="multiple"
               value={newProduct.brand}
               onChange={(value) => {
                 setNewProduct({ ...newProduct, brand: value });
               }}
             >
-              <Option value="Adidas">Adidas</Option>
-              <Option value="Hoka">Hoka</Option>
-              <Option value="Nike">Nike</Option>
-              <Option value="Columbia">Columbia</Option>
-              <Option value="Skechers">Skechers</Option>
-              <Option value="On running">On Running</Option>
-              <Option value="Saucony">Saucony</Option>
-              <Option value="New Balance">New Balances</Option>
+              {brands.map((brand) => (
+                <Option key={brand.id} value={brand.name}>
+                  {brand.name}
+                </Option>
+              ))}
             </Select>
           </Form.Item>
         </Col>

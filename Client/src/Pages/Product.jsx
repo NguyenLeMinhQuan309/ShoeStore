@@ -1,20 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./Css/main.css";
+import { useSearch } from "../Context/SearchContext"; // Adjust the path accordingly
 import Navbar from "../Components/Navbar/Navbar";
 import ProductItem from "../Components/ProductItem/ProductItem";
-
-// Define fixed categories, brands, and colors
-const CATEGORIES = [
-  { display: "Dép quai ngang", value: "depquainang" },
-  { display: "Dép xỏ ngón", value: "depxongon" },
-  { display: "Giày bóng rổ", value: "giaybongro" },
-  { display: "Giày chạy bộ", value: "giaychaybo" },
-  { display: "Giày đá bóng", value: "giaydabong" },
-  { display: "Giày đi bộ", value: "giaydibo" },
-  { display: "Giày sandal", value: "giaysandal" },
-  { display: "Giày sneakers", value: "giaysneakers" },
-];
 
 const BRANDS = [
   "Adidas",
@@ -28,112 +17,142 @@ const BRANDS = [
 ];
 
 const COLORS = [
-  "Xanh dương",
+  "Xanh Dương",
   "Xám",
   "Đen",
   "Trắng",
   "Đỏ",
   "Vàng",
-  "Xanh lá",
+  "Xanh Lá",
+  "Xanh Navy",
   "Tím",
+  "Đa sắc",
 ];
 
+const SIZES = [36, 37, 38, 39, 40, 41, 42, 43, 44]; // Define available sizes
+
 const ProductComponent = () => {
+  const { searchTerm } = useSearch(); // Get the search term from context
   const [products, setProducts] = useState([]);
-  const [filteredProducts, setFilteredProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({
-    category: [],
-    brand: [],
-    color: [],
+    category: "",
+    brand: "",
+    color: "",
+    size: "",
   });
 
+  // Fetch categories from the backend
   useEffect(() => {
-    axios
-      .get("http://localhost:3000/shoe/getShoes")
-      .then((response) => {
-        setProducts(response.data);
-        setFilteredProducts(response.data); // Initialize filteredProducts
-      })
-      .catch((error) => {
-        console.error("Error fetching data: ", error);
-      });
+    const fetchCategoriesAndBrands = async () => {
+      try {
+        const [categoriesResponse, brandsResponse] = await Promise.all([
+          axios.get("http://localhost:3000/category/getAll"),
+          axios.get("http://localhost:3000/brand/getAll"),
+        ]);
+        setCategories(categoriesResponse.data);
+        // Assuming you want to use fetched brands instead of hardcoded ones
+        // setBrands(brandsResponse.data);
+      } catch (error) {
+        console.error("Error fetching categories or brands: ", error);
+      }
+    };
+
+    fetchCategoriesAndBrands();
   }, []);
 
-  const applyFilters = () => {
-    let filtered = products;
-    console.log(filtered);
-    // Apply category filter
-    if (selectedFilters.category.length > 0) {
-      filtered = filtered.filter(
-        (product) => selectedFilters.category.includes(product.category.value) // Ensure this matches the structure
-      );
+  // Fetch products based on filters and search term
+  const applyFilters = async () => {
+    const { category, brand, color, size } = selectedFilters;
+    const query = [];
+
+    if (category) {
+      query.push(`category=${category}`);
+    }
+    if (brand) {
+      query.push(`brand=${brand}`);
+    }
+    if (color) {
+      query.push(`color=${color}`);
+    }
+    if (size) {
+      query.push(`size=${size}`);
     }
 
-    // Apply brand filter
-    if (selectedFilters.brand.length > 0) {
-      filtered = filtered.filter((product) =>
-        selectedFilters.brand.includes(product.brand)
-      );
-    }
+    const queryString = query.length ? `?${query.join("&")}` : "";
 
-    // Apply color filter
-    if (selectedFilters.color.length > 0) {
-      filtered = filtered.filter((product) =>
-        selectedFilters.color.includes(product.color)
+    try {
+      const response = await axios.get(
+        queryString
+          ? `http://localhost:3000/shoe/filterproducts${queryString}`
+          : "http://localhost:3000/shoe/getShoes"
       );
-    }
 
-    setFilteredProducts(filtered);
+      // Filter products based on the search term
+      const filteredProducts = response.data.filter((product) =>
+        product.name.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+      setProducts(filteredProducts);
+    } catch (error) {
+      console.error("Error fetching products: ", error);
+    }
   };
 
+  // Fetch initial products
+  useEffect(() => {
+    applyFilters(); // Apply filters initially and when they change
+  }, [selectedFilters, searchTerm]); // Add searchTerm to dependencies
+
+  // Update category filter
   const handleFilterChange = (category) => {
-    setSelectedFilters((prev) => {
-      const newCategories = prev.category.includes(category)
-        ? prev.category.filter((cat) => cat !== category) // Remove category if already selected
-        : [...prev.category, category]; // Add category if not selected
-      return { ...prev, category: newCategories };
-    });
+    setSelectedFilters((prev) => ({
+      ...prev,
+      category: prev.category === category ? "" : category,
+    }));
   };
 
+  // Update brand filter
   const handleBrandChange = (brand) => {
-    setSelectedFilters((prev) => {
-      const newBrands = prev.brand.includes(brand)
-        ? prev.brand.filter((b) => b !== brand) // Remove brand if already selected
-        : [...prev.brand, brand]; // Add brand if not selected
-      return { ...prev, brand: newBrands };
-    });
+    setSelectedFilters((prev) => ({
+      ...prev,
+      brand: prev.brand === brand ? "" : brand,
+    }));
   };
 
+  // Update color filter
   const handleColorChange = (color) => {
-    setSelectedFilters((prev) => {
-      const newColors = prev.color.includes(color)
-        ? prev.color.filter((c) => c !== color) // Remove color if already selected
-        : [...prev.color, color]; // Add color if not selected
-      return { ...prev, color: newColors };
-    });
+    setSelectedFilters((prev) => ({
+      ...prev,
+      color: prev.color === color ? "" : color,
+    }));
   };
 
+  // Update size filter
+  const handleSizeChange = (size) => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      size: prev.size === size ? "" : size,
+    }));
+  };
+
+  // Sort products
   const handleSortChange = (sortType) => {
     let sortedProducts;
     if (sortType === "asc") {
-      sortedProducts = [...filteredProducts].sort((a, b) => a.price - b.price);
+      sortedProducts = [...products].sort((a, b) => a.price - b.price);
     } else if (sortType === "desc") {
-      sortedProducts = [...filteredProducts].sort((a, b) => b.price - a.price);
+      sortedProducts = [...products].sort((a, b) => b.price - a.price);
     } else if (sortType === "az") {
-      sortedProducts = [...filteredProducts].sort((a, b) =>
+      sortedProducts = [...products].sort((a, b) =>
         a.name.localeCompare(b.name)
       );
     } else if (sortType === "za") {
-      sortedProducts = [...filteredProducts].sort((a, b) =>
+      sortedProducts = [...products].sort((a, b) =>
         b.name.localeCompare(a.name)
       );
     }
-    setFilteredProducts(sortedProducts);
+    setProducts(sortedProducts);
   };
-
-  useEffect(() => {
-    applyFilters(); // Apply filters whenever selectedFilters changes
-  }, [selectedFilters]);
 
   return (
     <div className="main">
@@ -142,17 +161,14 @@ const ProductComponent = () => {
           onFilterChange={handleFilterChange}
           onBrandChange={handleBrandChange}
           onColorChange={handleColorChange}
+          onSizeChange={handleSizeChange}
           onSortChange={handleSortChange}
-          categories={CATEGORIES}
+          categories={categories}
           brands={BRANDS}
-          colors={COLORS} // Pass colors to the Navbar
+          colors={COLORS}
+          sizes={SIZES}
         />
-        <ProductItem
-          products={filteredProducts.length > 0 ? filteredProducts : products}
-          selectedCategories={selectedFilters.category}
-          selectedBrands={selectedFilters.brand}
-          selectedColors={selectedFilters.color}
-        />
+        <ProductItem products={products} colors={selectedFilters.color} />
       </div>
     </div>
   );

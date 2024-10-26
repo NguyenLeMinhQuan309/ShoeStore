@@ -20,7 +20,7 @@
 }
 .product-area .product {
   display: grid; /* Biến khu vực sản phẩm thành flex container */
-  grid-template-columns: repeat(4, 1fr); /* 4 sản phẩm mỗi hàng */
+  grid-template-columns: repeat(3, 1fr); /* 4 sản phẩm mỗi hàng */
   grid-gap: 10px; /* Khoảng cách giữa các sản phẩm */
   background-color: white;
 }

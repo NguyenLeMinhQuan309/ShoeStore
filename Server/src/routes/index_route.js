@@ -5,6 +5,9 @@ const reviewRouter = require("./review_route");
 const cartRouter = require("./cart_route");
 const orderRouter = require("./order_route");
 const addressRouter = require("./address_route");
+const statisticRouter = require("./statistic_route");
+const brandRouter = require("./brand_route");
+const paymentRouter = require("./payment_route");
 //const detailRouter = require('./detail_route');
 function route(app) {
   app.use("/user", userRouter);
@@ -14,5 +17,8 @@ function route(app) {
   app.use("/cart", cartRouter);
   app.use("/order", orderRouter);
   app.use("/address", addressRouter);
+  app.use("/statistics", statisticRouter);
+  app.use("/brand", brandRouter);
+  app.use("/payment", paymentRouter);
 }
 module.exports = route;

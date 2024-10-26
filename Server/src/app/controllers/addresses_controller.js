@@ -28,12 +28,26 @@ class AddressController {
     try {
       const updatedAddress = await Address.findOneAndUpdate(
         { email: req.params.email }, // Use findOneAndUpdate with email as filter
-        req.body, // Update the address fields
+        req.body.address, // Update the address fields
         { new: true } // Return the updated document
       );
+      console.log(req.body);
+
+      // If no address was found, create a new one
       if (!updatedAddress) {
-        return res.status(404).json({ message: "Address not found" });
+        const address = new Address({
+          email: req.params.email,
+          number: req.body.address.number,
+          street: req.body.address.street,
+          ward: req.body.address.ward,
+          district: req.body.address.district,
+          city: req.body.address.city,
+        }); // Use spread operator for req.body
+        const savedAddress = await address.save();
+        return res.status(201).json(savedAddress); // Use 201 Created for a new resource
       }
+
+      // If the address was found and updated, return it
       res.status(200).json(updatedAddress);
     } catch (error) {
       res.status(400).json({ message: error.message });

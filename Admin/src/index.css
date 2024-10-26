@@ -5,10 +5,3 @@
   text-align: left; /* Căn trái */
   margin: 0; /* Loại bỏ margin mặc định */
 }
-
-.user-management-container {
-  padding: 20px;
-  background-color: white; /* Màu nền trắng cho vùng nội dung */
-  border-radius: 8px; /* Bo tròn góc */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Đổ bóng */
-}

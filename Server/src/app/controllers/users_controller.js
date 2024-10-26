@@ -59,7 +59,7 @@ class UserController {
       // Tạo người dùng mới
       const newUser = new User({
         name,
-        role: "customer",
+        role: email.includes("admin") ? "admin" : "customer",
         email,
         password: hashedPass,
       });
@@ -101,7 +101,8 @@ class UserController {
         res.status(200).json({
           message: "Đăng nhập thành công - Chuyển hướng đến trang admin",
           token,
-          redirectTo: "/admin",
+          redirectTo: "http://Localhost:4000",
+          user,
         });
         // res.render('admin');
       } else {

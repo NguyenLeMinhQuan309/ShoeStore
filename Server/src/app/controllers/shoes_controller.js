@@ -24,7 +24,7 @@ class ShoesController {
         brand,
         stock,
         description,
-        color,
+        color, // This should be an array now
       } = req.body;
 
       // Fetch the latest shoe to get the last ID
@@ -47,31 +47,43 @@ class ShoesController {
         .sort((a, b) => a - b);
 
       // Convert category string to an array of strings, trimming extra spaces
-      const parsedCategory = category.split(",").map((cat) => cat.trim());
 
-      let imageUrls = [];
+      const images = [];
       if (req.files && req.files.length > 0) {
-        // Move images from temporary directory to the final directory after saving the shoe
         const tempDir = path.join(__dirname, `../../../uploads/Shoes/temp`);
-        const finalDir = path.join(
-          __dirname,
-          `../../../uploads/Shoes/${newId}/${color}`
-        );
-
-        // Create the final directory if it doesn't exist
-        if (!fs.existsSync(finalDir)) {
-          fs.mkdirSync(finalDir, { recursive: true });
+        // Ensure there are enough files to cover both colors
+        if (req.files.length < 6) {
+          return res.status(400).json({
+            message: "At least 12 images are required for two colors.",
+          });
         }
 
-        // Prepare image URLs
-        imageUrls = req.files.map((file) => {
-          const finalFilePath = path.join(finalDir, file.filename);
-          fs.renameSync(path.join(tempDir, file.filename), finalFilePath); // Move file from temp to final directory
+        // Create directories and populate image URLs for each color
+        color.forEach((c, index) => {
+          const finalDir = path.join(
+            __dirname,
+            `../../../uploads/Shoes/${newId}/${c}`
+          );
 
-          // Construct the URL using forward slashes
-          return `${req.protocol}://${req.get(
-            "host"
-          )}/shoe/uploads/Shoes/${newId}/${color}/${file.filename}`;
+          // Create the final directory if it doesn't exist
+          if (!fs.existsSync(finalDir)) {
+            fs.mkdirSync(finalDir, { recursive: true });
+          }
+
+          // Prepare image URLs for the specific color
+          const colorImageUrls = req.files
+            .slice(index * 6, (index + 1) * 6)
+            .map((file) => {
+              const finalFilePath = path.join(finalDir, file.filename);
+              fs.renameSync(path.join(tempDir, file.filename), finalFilePath); // Move file from temp to final directory
+
+              // Construct the URL using forward slashes
+              return `${req.protocol}://${req.get(
+                "host"
+              )}/shoe/uploads/Shoes/${newId}/${c}/${file.filename}`;
+            });
+
+          images.push({ imageUrls: colorImageUrls, color: c });
         });
       }
 
@@ -79,13 +91,13 @@ class ShoesController {
       const newShoe = new Shoe({
         id: newId,
         name,
-        category: parsedCategory,
+        category,
         brand,
         stock,
         description,
         price,
         size: parsedSize,
-        images: [{ imageUrls, color }],
+        images: images,
       });
 
       await newShoe.save();
@@ -115,7 +127,6 @@ class ShoesController {
         .split(",")
         .map(Number)
         .sort((a, b) => a - b);
-      const parsedCategory = category.split(",").map((cat) => cat.trim());
 
       let updatedImageField = {};
       if (req.files && req.files.length > 0) {
@@ -146,7 +157,7 @@ class ShoesController {
         {
           name,
           size: parsedSize,
-          category: parsedCategory,
+          category,
           brand,
           stock,
           description,
@@ -163,6 +174,95 @@ class ShoesController {
     } catch (err) {
       console.error(err);
       res.status(400).json({ message: err.message });
+    }
+  }
+  // async filterProducts(req, res) {
+  //   try {
+  //     const { category, brand, color, size } = req.query;
+
+  //     // Step 1: Build the query object dynamically
+  //     let query = {};
+
+  //     if (category) {
+  //       // If category is a string (single category), convert it into an array
+  //       const categories = Array.isArray(category) ? category : [category];
+  //       query.category = { $in: categories }; // Use $in to match any category in the array
+  //     }
+
+  //     if (brand) {
+  //       query.brand = brand;
+  //     }
+
+  //     if (color) {
+  //       // Filter by the color field inside the images array
+  //       query["image.color"] = color; // Match color in the images array
+  //     }
+
+  //     if (size) {
+  //       query.size = size;
+  //     }
+
+  //     // Step 2: Find products based on the query
+  //     const products = await Product.find(query);
+
+  //     // Step 3: Return the filtered products
+  //     res.status(200).json(products);
+  //   } catch (error) {
+  //     res.status(400).json({ message: "Error filtering products", error });
+  //   }
+  // }
+  async filterProduct(req, res) {
+    try {
+      const { category, brand, color, size } = req.query;
+
+      let filters = {};
+
+      if (category) {
+        filters.category = { $in: category.split(",") };
+      }
+
+      if (brand) {
+        filters.brand = { $in: brand.split(",") };
+      }
+
+      if (color) {
+        filters["images.color"] = { $in: color.split(",") };
+      }
+      if (size) {
+        filters.size = { $in: size.split(",") };
+      }
+      console.log(filters);
+      const products = await Shoe.find(filters);
+      // console.log(products);
+      res.status(200).json(products);
+    } catch (error) {
+      res
+        .status(400)
+        .json({ message: "Error fetching filtered products", error });
+    }
+  }
+  // Tìm kiếm sản phẩm giày theo tên hoặc mô tả
+  async searchShoes(req, res) {
+    try {
+      const { query } = req.query; // Expecting a query string for the search
+
+      // Build a dynamic search query using regular expressions for case-insensitive matching
+      const searchCriteria = query
+        ? {
+            $or: [
+              { name: { $regex: query, $options: "i" } }, // Case-insensitive search for name
+              { description: { $regex: query, $options: "i" } }, // Case-insensitive search for description
+            ],
+          }
+        : {};
+
+      // Find products that match the search criteria
+      const products = await Shoe.find(searchCriteria);
+
+      // Return the matching products
+      res.status(200).json(products);
+    } catch (error) {
+      res.status(400).json({ message: "Error searching for products", error });
     }
   }
 }

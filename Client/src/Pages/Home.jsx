@@ -11,7 +11,7 @@ const home = () => {
       <div className="component">
         <NewSection />
       </div>
-      <Popular />
+      {/* <Popular /> */}
     </div>
   );
 };

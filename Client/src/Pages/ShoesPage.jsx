@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useLocation } from "react-router-dom";
 import {
   Row,
   Col,
@@ -13,6 +13,7 @@ import {
   Modal,
   List,
   InputNumber,
+  notification,
 } from "antd";
 import RatingComponent from "../Components/Rating/Rating";
 const { Title, Text } = Typography;
@@ -20,8 +21,11 @@ const { TextArea } = Input;
 
 const ShoesPage = ({ products }) => {
   const { id } = useParams();
+  const location = useLocation(); // Get the location object
   const product = products.find((p) => p.id === id);
-
+  const query = new URLSearchParams(location.search);
+  const color = query.get("color"); // Get the color from the query string
+  console.log(query);
   if (!product) {
     return <p>Product not found</p>;
   }
@@ -30,6 +34,7 @@ const ShoesPage = ({ products }) => {
   const [selectedColorIndex, setSelectedColorIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
+
   // Fetch product data when component mounts
   useEffect(() => {
     const fetchReviews = async () => {
@@ -57,6 +62,18 @@ const ShoesPage = ({ products }) => {
 
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState(null);
+
+  // Set the selected color index based on the URL color parameter
+  useEffect(() => {
+    if (color) {
+      const matchingIndex = product.images.findIndex(
+        (img) => img.color === color
+      );
+      if (matchingIndex !== -1) {
+        setSelectedColorIndex(matchingIndex);
+      }
+    }
+  }, [color, product.images]);
 
   const handleColorThumbnailClick = (index) => {
     setSelectedColorIndex(index);
@@ -113,12 +130,20 @@ const ShoesPage = ({ products }) => {
     const email = user ? user.email : null;
 
     if (!email) {
-      alert("User not logged in");
+      notification.warning({
+        message: "User Not Logged In",
+        description: "You need to log in to add items to your cart.",
+        placement: "topRight",
+      });
       return;
     }
 
     if (!selectedSize) {
-      alert("Please select a size");
+      notification.warning({
+        message: "Size Not Selected",
+        description: "Please select a size before adding to the cart.",
+        placement: "topRight",
+      });
       return;
     }
 
@@ -147,13 +172,29 @@ const ShoesPage = ({ products }) => {
 
       const data = await response.json();
       if (response.ok) {
-        alert(data.message);
         window.location.reload(); // Reload the page after adding to cart
+        notification.success({
+          message: "Item Added",
+          description: data.message,
+          placement: "topRight",
+        });
       } else {
         console.error("Failed to add item:", data);
+        notification.error({
+          message: "Add to Cart Failed",
+          description:
+            data.message ||
+            "An error occurred while adding the item to the cart.",
+          placement: "topRight",
+        });
       }
     } catch (error) {
       console.error("Error:", error);
+      notification.error({
+        message: "Error",
+        description: "An unexpected error occurred.",
+        placement: "topRight",
+      });
     }
   };
 
@@ -182,9 +223,9 @@ const ShoesPage = ({ products }) => {
                   <Col span={4} key={index}>
                     <img
                       src={url}
-                      alt={`Image ${index + 1} of ${
+                      alt={`Image ${index + 1} of $(
                         product.images[selectedColorIndex].color
-                      }`}
+                      )`}
                       onClick={() => handleImageThumbnailClick(index)}
                       style={{
                         width: "100%",
@@ -214,16 +255,16 @@ const ShoesPage = ({ products }) => {
             <Text strong>Price: </Text>
             <Text>{product.price} VND</Text>
             <h3 style={{ marginTop: "20px" }}>Available Colors:</h3>
-            <Row gutter={16}>
+            <Row gutter={8}>
               {product.images.map((img, colorIndex) => (
-                <Col span={8} key={colorIndex} style={{ marginBottom: "10px" }}>
+                <Col span={3} key={colorIndex} style={{ marginBottom: "10px" }}>
                   <img
                     src={img.imageUrls[0]}
                     alt={img.color}
                     onClick={() => handleColorThumbnailClick(colorIndex)}
                     style={{
                       cursor: "pointer",
-                      width: "50%",
+                      width: "100%",
                       border:
                         selectedColorIndex === colorIndex
                           ? "2px solid blue"

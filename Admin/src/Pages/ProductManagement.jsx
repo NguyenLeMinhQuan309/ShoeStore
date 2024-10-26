@@ -8,11 +8,32 @@ import "./css/ProductManagement.css";
 
 const { Title } = Typography;
 
+const CATEGORIES = [
+  "depquainang",
+  "depxongon",
+  "giaybongro",
+  "giaychaybo",
+  "giaydabong",
+  "giaydibo",
+  "giaysandal",
+  "giaysneakers",
+];
+
+const BRANDS = [
+  "Adidas",
+  "Hoka",
+  "Nike",
+  "Columbia",
+  "Skechers",
+  "On Running",
+  "Saucony",
+  "New Balance",
+];
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
     name: "",
-    category: [],
+    category: "",
     brand: "",
     size: [],
     price: 0,
@@ -36,7 +57,7 @@ const ProductManagement = () => {
     console.log("Product to be added:", product); // Debugging
     if (
       !product.name ||
-      !product.category.length ||
+      !product.category ||
       !product.brand ||
       !product.size.length ||
       product.price <= 0 ||
@@ -93,7 +114,7 @@ const ProductManagement = () => {
         setNewProduct({
           // Reset newProduct state
           name: "",
-          category: [],
+          category: "",
           brand: "",
           size: [],
           price: 0,
@@ -125,7 +146,7 @@ const ProductManagement = () => {
         onClick={() => {
           setNewProduct({
             name: "",
-            category: [],
+            category: "",
             brand: "",
             size: [],
             price: 0,
@@ -148,7 +169,11 @@ const ProductManagement = () => {
         addProduct={addProduct}
       />
       <Card>
-        <ProductTable products={products} />
+        <ProductTable
+          products={products}
+          categories={CATEGORIES}
+          brands={BRANDS}
+        />
       </Card>
     </div>
   );

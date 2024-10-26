@@ -2,49 +2,20 @@ import React, { useState, useEffect } from "react";
 import "./ProductItem.css";
 import Item from "../Item/Item";
 
-const ProductItem = ({
-  products,
-  selectedCategories,
-  selectedBrands,
-  selectedColors,
-}) => {
+const ProductItem = ({ products, colors }) => {
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 20;
-
-  // Filter products based on selected categories, brands, and colors
-  const filteredProducts = products.filter((product) => {
-    const matchesCategory =
-      selectedCategories.length === 0 || // If no categories selected, match all
-      selectedCategories.includes(product.category.value);
-    const matchesBrand =
-      selectedBrands.length === 0 || // If no brands selected, match all
-      selectedBrands.includes(product.brand);
-    const matchesColor =
-      selectedColors.length === 0 || // If no colors selected, match all
-      selectedColors.includes(product.color);
-
-    return matchesCategory && matchesBrand && matchesColor; // Return true only if all conditions are met
-  });
-
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const itemsPerPage = 9;
+  const totalPages = Math.ceil(products.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredProducts.slice(
-    indexOfFirstItem,
-    indexOfLastItem
-  );
+  const currentItems = products.slice(indexOfFirstItem, indexOfLastItem);
 
   const handlePageChange = (pageNumber) => {
     if (pageNumber < 1 || pageNumber > totalPages) return; // Prevent invalid page change
     setCurrentPage(pageNumber); // Update current page
   };
 
-  useEffect(() => {
-    // Reset to the first page whenever filters change
-    setCurrentPage(1);
-  }, [selectedCategories, selectedBrands, selectedColors]);
-
-  if (filteredProducts.length === 0) {
+  if (products.length === 0) {
     return <div>No products found</div>; // Display a message if no products are available
   }
 
@@ -52,7 +23,7 @@ const ProductItem = ({
     <div className="product-area">
       <div className="product">
         {currentItems.map((product) => (
-          <Item key={product.id} product={product} /> // Use product.id or another unique identifier
+          <Item key={product.id} product={product} colors={colors} /> // Use product.id or another unique identifier
         ))}
       </div>
       {/* Pagination Controls */}

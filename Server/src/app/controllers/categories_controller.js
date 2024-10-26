@@ -4,7 +4,7 @@ class CategoryController {
   // Create a new category
   async createCategory(req, res) {
     try {
-      const { id, name, description } = req.body;
+      const { id, name } = req.body;
       const category = new Category({ id, name });
       await category.save();
       res
@@ -19,7 +19,7 @@ class CategoryController {
   async getCategories(req, res) {
     try {
       const categories = await Category.find({});
-      console.log("All Category Fetched");
+      // console.log("All Category Fetched");
       res.status(200).send(categories);
     } catch (error) {
       res.status(400).json({ message: "Error fetching categories", error });

@@ -11,11 +11,11 @@ router.post("/", OrderController.createOrder);
 router.get("/", OrderController.getOrders);
 
 // Get a specific order by ID
-router.get("/:id", OrderController.getOrderById);
-
+router.get("/getEmail/:email", OrderController.getOrderByEmail);
+router.get("/getId/:id", OrderController.getOrderById);
 // Update order status by ID
 router.put("/:id/status", OrderController.updateOrderStatus);
-
+router.put("/:id/paid", OrderController.updateOrderPaid);
 // Delete an order by ID
 router.delete("/:id", OrderController.deleteOrder);
 

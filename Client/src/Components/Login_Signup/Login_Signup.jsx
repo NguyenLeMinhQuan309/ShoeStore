@@ -5,6 +5,8 @@ import Cart from "../Cart/Cart";
 import "./Login_Signup.css";
 import { Input, Button, Modal, Popover } from "antd";
 import UserInfoModal from "../UserInfo/UserInfo";
+import MyOrder from "../MyOrder/MyOrder";
+import PurchaseHistoryModal from "../PurchaseHistoryModal/PurchaseHistoryModal";
 const Login_Signup = () => {
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -18,7 +20,9 @@ const Login_Signup = () => {
     useState("");
   const [isPersonalInfoModalVisible, setIsPersonalInfoModalVisible] =
     useState(false);
-
+  const [isOrderModalVisible, setIsOrderModalVisible] = useState(false);
+  const [isPurchaseHistoryModalVisible, setIsPurchaseHistoryModalVisible] =
+    useState(false);
   useEffect(() => {
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -63,16 +67,36 @@ const Login_Signup = () => {
   const showPersonalInfoModal = () => {
     setIsPersonalInfoModalVisible(true);
   };
+  const showOrderModal = () => {
+    setIsOrderModalVisible(true);
+  };
 
+  const handleOrderModalClose = () => {
+    setIsOrderModalVisible(false);
+  };
+
+  const showHistoryModal = () => {
+    setIsPurchaseHistoryModalVisible(true);
+  };
+
+  const handleHistoryModal = () => {
+    setIsPurchaseHistoryModalVisible(false);
+  };
   const handleLogin = async () => {
     try {
       const response = await axios.post("http://localhost:3000/user/login", {
         email: emailInputValue,
         password: passwordInputValue,
       });
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      setUser(response.data.user); // Lưu user vào state để hiển thị trên UI
+      if (response.data.user.role === "admin") {
+        window.location.href = "http://localhost:4000";
+      } else {
+        localStorage.setItem("user", JSON.stringify(response.data.user));
+        setUser(response.data.user); // Lưu user vào state để hiển thị trên UI
+      }
       handleOk();
+
+      // Check if the user's email ends with @admin
     } catch (error) {
       console.error("Login error:", error.response.data);
       // Xử lý lỗi nếu cần, ví dụ như hiển thị thông báo cho người dùng
@@ -106,10 +130,10 @@ const Login_Signup = () => {
       <Button type="link" onClick={showPersonalInfoModal}>
         Thông tin cá nhân
       </Button>
-      <Button type="link" onClick={() => navigate("/my-order")}>
+      <Button type="link" onClick={showOrderModal}>
         Đơn hàng của tôi
       </Button>
-      <Button type="link" onClick={() => navigate("/historical-order")}>
+      <Button type="link" onClick={showHistoryModal}>
         Lịch sử mua hàng
       </Button>
       <Button type="link" onClick={() => anavigate("/my-discount")}>
@@ -209,6 +233,16 @@ const Login_Signup = () => {
         isPersonalInfoModalVisible={isPersonalInfoModalVisible}
         setIsPersonalInfoModalVisible={setIsPersonalInfoModalVisible}
         onUserUpdate={updateUserInfo} // Pass the update function as a prop
+      />
+      <MyOrder
+        isVisible={isOrderModalVisible}
+        handleClose={handleOrderModalClose}
+        user={user}
+      />
+      <PurchaseHistoryModal
+        isVisible={isPurchaseHistoryModalVisible}
+        handleClose={handleHistoryModal}
+        user={user}
       />
     </div>
   );

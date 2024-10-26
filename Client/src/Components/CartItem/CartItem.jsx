@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Card, Button, List, Typography } from "antd";
+import { Card, Button, List, Typography, notification } from "antd"; // Import notification
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import OrderModal from "../OrderModal/OrderModal"; // Import the OrderModal component
 import "./CartItem.css";
@@ -92,12 +92,23 @@ const CartItem = () => {
 
   // Function to handle showing the modal
   const handleOrder = () => {
+    if (cartItems.length === 0) {
+      notification.warning({
+        message: "Giỏ hàng trống",
+        description: "Bạn không có sản phẩm nào trong giỏ hàng.",
+      });
+      return; // Ngừng nếu giỏ hàng rỗng
+    }
     setIsModalVisible(true);
   };
 
   // Function to handle modal close
   const handleCancel = () => {
     setIsModalVisible(false);
+  };
+
+  const clearCart = () => {
+    setCartItems([]); // Xóa tất cả sản phẩm khỏi giỏ hàng
   };
 
   return (
@@ -167,8 +178,10 @@ const CartItem = () => {
         isVisible={isModalVisible}
         handleClose={handleCancel}
         cartItems={cartItems}
+        setCartItems={setCartItems}
         totalPrice={totalPrice}
         user={user}
+        onOrderSuccess={clearCart}
       />
     </Card>
   );

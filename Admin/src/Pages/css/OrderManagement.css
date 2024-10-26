@@ -1,0 +1,51 @@
+/* OrderManagement.css */
+
+.order-management-container {
+  padding: 20px;
+  background-color: white; /* White background for the content area */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Box shadow for depth */
+}
+
+.order-management-title {
+  margin-bottom: 20px; /* Space below the title */
+}
+
+.order-management-add-button {
+  margin-bottom: 20px; /* Space below the add button */
+}
+
+.order-management-table {
+  margin-top: 20px; /* Space above the table */
+}
+
+.order-management-modal {
+  width: 100%; /* Full width for modal */
+}
+
+.order-management-form-item {
+  margin-bottom: 16px; /* Space below each form item */
+}
+
+.order-management-status {
+  /* Optional: You can add styles for different order statuses */
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: bold;
+}
+
+.order-management-status-pending {
+  background-color: #ffa940; /* Orange for pending */
+  color: white;
+}
+
+.order-management-status-completed {
+  background-color: #52c41a; /* Green for completed */
+  color: white;
+}
+
+.order-management-status-canceled {
+  background-color: #ff4d4f; /* Red for canceled */
+  color: white;
+}

@@ -1,29 +1,26 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import CategoryComponent from "../Category/Category";
-import "./Header.css";
-import Login_Signup from "../Login_Signup/Login_Signup";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { Layout, Dropdown, Space, Input } from "antd";
-import { DownOutlined } from "@ant-design/icons";
+import { Layout, Input } from "antd";
+import { useSearch } from "../../Context/SearchContext"; // Adjust the path accordingly
+import Login_Signup from "../Login_Signup/Login_Signup";
+import "./Header.css";
 
 const { Header } = Layout;
 
 const HeaderComponent = () => {
-  const [menu, setMenu] = useState("home");
-  const [searchTerm, setSearchTerm] = useState("");
+  const { setSearchTerm } = useSearch(); // Get setSearchTerm from context
+  const [inputValue, setInputValue] = useState("");
 
   const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+    setInputValue(e.target.value);
+    setSearchTerm(e.target.value); // Update the search term in context
   };
 
   return (
     <Layout>
       <Header className="header">
         <Link to="/">
-          <div className="logo" onClick={() => setMenu("home")}>
-            ShoesShop
-          </div>
+          <div className="logo">ShoesShop</div>
         </Link>
         <nav>
           <ul>
@@ -33,14 +30,11 @@ const HeaderComponent = () => {
             <li>
               <Link to="/product">Sản phẩm</Link>
             </li>
-            <li>
-              <CategoryComponent />
-            </li>
           </ul>
         </nav>
         <Input
           placeholder="Search..."
-          value={searchTerm}
+          value={inputValue}
           onChange={handleSearchChange}
         />
         <Login_Signup />

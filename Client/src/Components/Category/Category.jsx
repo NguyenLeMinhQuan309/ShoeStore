@@ -1,64 +1,95 @@
-import React, { useState, useEffect } from "react";
-import { Dropdown, Space, Spin } from "antd";
+import React from "react";
+import { Dropdown, Space, Row, Col } from "antd";
 import { DownOutlined } from "@ant-design/icons";
-import axios from "axios";
+import { Link } from "react-router-dom"; // Import Link
+
+const CATEGORIES = [
+  { display: "Dép quai ngang", value: "depquainang" },
+  { display: "Dép xỏ ngón", value: "depxongon" },
+  { display: "Giày bóng rổ", value: "giaybongro" },
+  { display: "Giày chạy bộ", value: "giaychaybo" },
+  { display: "Giày đá bóng", value: "giaydabong" },
+  { display: "Giày đi bộ", value: "giaydibo" },
+  { display: "Giày sandal", value: "giaysandal" },
+  { display: "Giày sneakers", value: "giaysneakers" },
+];
+
+const BRANDS = [
+  "Adidas",
+  "Hoka",
+  "Nike",
+  "Columbia",
+  "Skechers",
+  "On Running",
+  "Saucony",
+  "New Balance",
+];
 
 const CategoryComponent = () => {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  // Fetch categories from the backend
-  useEffect(() => {
-    const fetchCategories = async () => {
-      try {
-        const response = await axios.get(
-          "http://localhost:3000/category/getAll"
-        );
-        setCategories(response.data);
-        console.log(categories);
-      } catch (error) {
-        console.error("Error fetching categories:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCategories();
-  }, []);
-
-  // Map categories to dropdown items
-  const items = categories.map((category) => ({
+  const categoryItems = CATEGORIES.map((category) => ({
     label: (
-      <a
-        key={category.id}
-        target="_blank"
-        rel="noopener noreferrer"
-        href={`#category-${category.id}`} // Replace with actual link logic
+      <Link
+        key={category.value}
+        to={`/product?category=${category.value}`} // Use Link to navigate and pass category
       >
-        {category.name}
-      </a>
+        {category.display}
+      </Link>
     ),
-    key: category.id,
+    key: category.value,
   }));
+
+  const brandItems = BRANDS.map((brand) => ({
+    label: (
+      <Link
+        key={brand}
+        to={`/product?brand=${brand}`} // Use Link to navigate and pass brand
+      >
+        {brand}
+      </Link>
+    ),
+    key: brand,
+  }));
+
+  const menuItems = [
+    {
+      label: (
+        <div>
+          <strong>Loại Giày</strong>
+          <Row>
+            {categoryItems.map((item) => (
+              <Col span={12} key={item.key}>
+                {item.label}
+              </Col>
+            ))}
+          </Row>
+          <strong>Thương Hiệu</strong>
+          <Row>
+            {brandItems.map((item) => (
+              <Col span={12} key={item.key}>
+                {item.label}
+              </Col>
+            ))}
+          </Row>
+        </div>
+      ),
+      key: "all",
+    },
+  ];
 
   return (
     <div>
-      {loading ? (
-        <Spin /> // Display loading spinner while categories are being fetched
-      ) : (
-        <Dropdown
-          menu={{
-            items,
-          }}
-        >
-          <a onClick={(e) => e.preventDefault()}>
-            <Space>
-              Danh mục
-              <DownOutlined />
-            </Space>
-          </a>
-        </Dropdown>
-      )}
+      <Dropdown
+        menu={{
+          items: menuItems,
+        }}
+      >
+        <a onClick={(e) => e.preventDefault()}>
+          <Space>
+            Danh mục
+            <DownOutlined />
+          </Space>
+        </a>
+      </Dropdown>
     </div>
   );
 };

@@ -17,7 +17,7 @@ class ReviewsController {
     try {
       const reviews = await Review.find({ id: req.body.id });
       res.status(200).send(reviews);
-      console.log(reviews);
+      // console.log(reviews);
     } catch (error) {
       res.status(500).send({ error: "Failed to fetch reviews" });
     }
