@@ -1,97 +1,70 @@
 import React from "react";
-import { Dropdown, Space, Row, Col } from "antd";
-import { DownOutlined } from "@ant-design/icons";
-import { Link } from "react-router-dom"; // Import Link
+import { Button, Row, Col } from "antd";
+import { useNavigate } from "react-router-dom";
 
-const CATEGORIES = [
-  { display: "Dép quai ngang", value: "depquainang" },
-  { display: "Dép xỏ ngón", value: "depxongon" },
-  { display: "Giày bóng rổ", value: "giaybongro" },
-  { display: "Giày chạy bộ", value: "giaychaybo" },
-  { display: "Giày đá bóng", value: "giaydabong" },
-  { display: "Giày đi bộ", value: "giaydibo" },
-  { display: "Giày sandal", value: "giaysandal" },
-  { display: "Giày sneakers", value: "giaysneakers" },
+const brands = [
+  {
+    name: "Adidas",
+    link: "Adidas",
+    logo: "src/assets/brandLogo/adidaslogo.jpg",
+  },
+  {
+    name: "Nike",
+    link: "Nike",
+    logo: "src/assets/brandLogo/nikelogo.jpg",
+  },
+  {
+    name: "Hoka",
+    link: "Hoka",
+    logo: "src/assets/brandLogo/hokalogo.png",
+  },
+  {
+    name: "NewBalance",
+    link: "New Balance",
+    logo: "src/assets/brandLogo/newbalancelogo.png",
+  },
 ];
 
-const BRANDS = [
-  "Adidas",
-  "Hoka",
-  "Nike",
-  "Columbia",
-  "Skechers",
-  "On Running",
-  "Saucony",
-  "New Balance",
-];
+const FeaturedBrands = () => {
+  const navigate = useNavigate();
 
-const CategoryComponent = () => {
-  const categoryItems = CATEGORIES.map((category) => ({
-    label: (
-      <Link
-        key={category.value}
-        to={`/product?category=${category.value}`} // Use Link to navigate and pass category
-      >
-        {category.display}
-      </Link>
-    ),
-    key: category.value,
-  }));
-
-  const brandItems = BRANDS.map((brand) => ({
-    label: (
-      <Link
-        key={brand}
-        to={`/product?brand=${brand}`} // Use Link to navigate and pass brand
-      >
-        {brand}
-      </Link>
-    ),
-    key: brand,
-  }));
-
-  const menuItems = [
-    {
-      label: (
-        <div>
-          <strong>Loại Giày</strong>
-          <Row>
-            {categoryItems.map((item) => (
-              <Col span={12} key={item.key}>
-                {item.label}
-              </Col>
-            ))}
-          </Row>
-          <strong>Thương Hiệu</strong>
-          <Row>
-            {brandItems.map((item) => (
-              <Col span={12} key={item.key}>
-                {item.label}
-              </Col>
-            ))}
-          </Row>
-        </div>
-      ),
-      key: "all",
-    },
-  ];
+  const handleButtonClick = (brand) => {
+    navigate(`/product?brand=${encodeURIComponent(brand)}`); // Điều hướng React Router
+  };
 
   return (
-    <div>
-      <Dropdown
-        menu={{
-          items: menuItems,
-        }}
-      >
-        <a onClick={(e) => e.preventDefault()}>
-          <Space>
-            Danh mục
-            <DownOutlined />
-          </Space>
-        </a>
-      </Dropdown>
+    <div style={{ padding: "20px", textAlign: "center" }}>
+      <h1 style={{ marginBottom: 10 }}>Thương hiệu nổi bật</h1>
+      <Row gutter={[16, 16]} justify="center">
+        {brands.map((brand) => (
+          <Col key={brand.name}>
+            <Button
+              style={{
+                width: 150,
+                height: 90,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: 0,
+                border: "1px solid #d9d9d9",
+              }}
+              onClick={() => handleButtonClick(brand.link)}
+            >
+              <img
+                src={brand.logo}
+                alt={brand.name}
+                style={{
+                  maxHeight: "100%",
+                  maxWidth: "100%",
+                  objectFit: "contain",
+                }}
+              />
+            </Button>
+          </Col>
+        ))}
+      </Row>
     </div>
   );
 };
 
-export default CategoryComponent;
+export default FeaturedBrands;

@@ -26,7 +26,7 @@ class PaymentController {
       app_time: Date.now(), // miliseconds
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
-      amount: req.body.amount / 1000,
+      amount: req.body.amount,
       description: `Thanh toan cho don hang #${req.body.order_id}`,
       bank_code: "zalopayapp",
       callback_url:

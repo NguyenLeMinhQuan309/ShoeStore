@@ -17,15 +17,20 @@ const ShoeSchema = new mongoose.Schema({
   slug: { type: String, unique: true }, // Ensure slug is unique
   category: { type: String, required: true },
   brand: { type: String, required: true },
-  size: [{ type: Number, required: true }],
-  price: { type: Number, required: true },
-  stock: { type: Number, required: true },
+  // stock: { type: Number, required: true },
   description: { type: String },
   gender: { type: Number },
   images: [
     {
       color: { type: String, required: true },
       imageUrls: [{ type: String, required: true }],
+      price: { type: Number, required: true },
+      stock: [
+        {
+          size: { type: Number },
+          quantity: { type: Number, default: 0 },
+        },
+      ],
     },
   ],
 });

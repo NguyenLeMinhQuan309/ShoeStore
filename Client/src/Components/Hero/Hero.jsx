@@ -2,6 +2,7 @@
 import React from "react";
 import heroimg from "../../assets/hero/hero.png";
 import { useNavigate } from "react-router-dom";
+import { Button } from "antd";
 import "./Hero.css";
 
 const Hero = () => {
@@ -13,9 +14,13 @@ const Hero = () => {
   return (
     <div className="hero">
       <img src={heroimg} alt="Hero Image" className="hero-image" />
-      <button className="hero-button" onClick={handleButtonClick}>
+      <Button
+        type="default"
+        className="hero-button"
+        onClick={handleButtonClick}
+      >
         Mua ngay
-      </button>
+      </Button>
     </div>
   );
 };

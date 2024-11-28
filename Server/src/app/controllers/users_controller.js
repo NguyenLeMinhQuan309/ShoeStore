@@ -45,7 +45,7 @@ class UserController {
 
   async signup(req, res) {
     try {
-      const { name, email, password } = req.body;
+      const { name, phone, email, password, gender } = req.body;
       console.log("req.body");
       // Kiểm tra xem email đã được đăng ký hay chưa
       const existingUser = await User.findOne({ email });
@@ -59,9 +59,11 @@ class UserController {
       // Tạo người dùng mới
       const newUser = new User({
         name,
+        phone,
         role: email.includes("admin") ? "admin" : "customer",
         email,
         password: hashedPass,
+        gender,
       });
 
       await newUser.save();
@@ -101,7 +103,7 @@ class UserController {
         res.status(200).json({
           message: "Đăng nhập thành công - Chuyển hướng đến trang admin",
           token,
-          redirectTo: "http://Localhost:4000",
+          redirectTo: "http://localhost:4000",
           user,
         });
         // res.render('admin');
@@ -178,12 +180,63 @@ class UserController {
 
       // Lưu thay đổi
       await user.save();
+      console.log(user);
       res.status(200).json({ message: "Cập nhật thành công.", user });
     } catch (error) {
       console.error("Error during user update:", error);
       res
         .status(500)
         .json({ message: "Cập nhật thất bại.", error: error.message });
+    }
+  }
+  async totalUsers(req, res) {
+    try {
+      // Đếm tổng số tài liệu (sản phẩm) trong collection
+      const total = await User.countDocuments({ role: "customer" });
+
+      // Trả về kết quả
+      res.status(200).json({ total });
+    } catch (error) {
+      // Xử lý lỗi nếu có
+      console.error("Error fetching total users:", error);
+      res.status(500).json({ error: "Failed to fetch total users" });
+    }
+  }
+  async updatePassword(req, res) {
+    try {
+      const userId = req.params.id;
+      const { oldPassword, newPassword, confirmPassword } = req.body;
+
+      // Kiểm tra mật khẩu mới và xác nhận mật khẩu có khớp không
+      if (newPassword !== confirmPassword) {
+        return res
+          .status(400)
+          .json({ message: "Mật khẩu mới và xác nhận mật khẩu không khớp" });
+      }
+
+      // Tìm người dùng theo userId
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: "Người dùng không tồn tại" });
+      }
+
+      // Kiểm tra mật khẩu cũ có đúng không
+      const isMatch = await bcrypt.compare(oldPassword, user.password);
+      if (!isMatch) {
+        return res.status(400).json({ message: "Mật khẩu cũ không đúng" });
+      }
+
+      // Mã hóa mật khẩu mới
+      const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+      // Cập nhật mật khẩu mới
+      user.password = hashedNewPassword;
+      await user.save();
+
+      res.status(200).json({ message: "Mật khẩu đã được thay đổi thành công" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Đã xảy ra lỗi. Vui lòng thử lại" });
     }
   }
 }

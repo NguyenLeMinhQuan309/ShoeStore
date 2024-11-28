@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Card, Typography } from "antd";
+import { Button, Card, Typography, notification } from "antd";
 import axios from "axios";
 import { PlusOutlined } from "@ant-design/icons";
 import UserTable from "../components/UserTable/UserTable";
@@ -14,12 +14,17 @@ const UserManagement = () => {
     name: "",
     email: "",
     phone: "",
-    address: "",
     image: "", // Đổi avatar thành image
     role: "customer",
     password: "",
-    profileImage: "",
     gender: null,
+  });
+  const [address, setAddress] = useState({
+    number: "",
+    street: "",
+    ward: "",
+    district: "",
+    city: "",
   });
   const [editingUser, setEditingUser] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -29,44 +34,86 @@ const UserManagement = () => {
       .get("http://localhost:3000/user/getall")
       .then((response) => setUsers(response.data))
       .catch((error) => console.error("There was an error!", error));
-  }, [users]);
+  }, []);
 
   const addUser = () => {
     if (editingUser) {
-      // Cập nhật user nếu đang trong chế độ chỉnh sửa
       axios
         .put(`http://localhost:3000/user/update/${editingUser._id}`, newUser)
-        .then((response) => {
-          const updatedUsers = users.map((user) =>
-            user._id === editingUser._id ? response.data : user
+        .then(() => {
+          // Cập nhật địa chỉ
+          return axios.put(
+            `http://localhost:3000/address/${editingUser.email}`,
+            {
+              ...address, // Địa chỉ từ state
+            }
           );
-          setUsers(updatedUsers);
-          setShowPopup(false);
         })
-        .catch((error) => console.error("There was an error!", error));
-    } else {
-      // Thêm user mới
-      axios
-        .post("http://localhost:3000/user/add", newUser)
+        .then(() => {
+          // Refetch danh sách người dùng sau khi chỉnh sửa địa chỉ
+          return axios.get("http://localhost:3000/user/getall");
+        })
         .then((response) => {
-          setUsers([...users, response.data]);
-          setShowPopup(false);
+          setUsers(response.data); // Cập nhật lại danh sách người dùng
+          setShowPopup(false); // Đóng popup
+          // Thông báo thành công
+          notification.success({
+            message: "Success",
+            description: "User and address updated successfully!",
+          });
         })
-        .catch((error) => console.error("There was an error!", error));
+        .catch((error) => {
+          console.error("There was an error!", error);
+          // Thông báo lỗi
+          notification.error({
+            message: "Error",
+            description: "Failed to update user or address.",
+          });
+        });
+    } else {
+      axios
+        .post("http://localhost:3000/user/signup", newUser)
+        .then((response) => {
+          const email = newUser.email; // Lấy ID của user mới
+          // Gửi địa chỉ lên API
+          return axios.post("http://localhost:3000/address", {
+            email, // Gửi kèm ID của user
+            ...address, // Địa chỉ từ state
+          });
+        })
+        .then(() => {
+          // Refetch danh sách người dùng sau khi thêm địa chỉ
+          return axios.get("http://localhost:3000/user/getall");
+        })
+        .then((response) => {
+          setUsers(response.data); // Cập nhật lại danh sách người dùng
+          setShowPopup(false); // Đóng popup
+          // Thông báo thành công
+          notification.success({
+            message: "Success",
+            description: "User and address added successfully!",
+          });
+        })
+        .catch((error) => {
+          console.error("There was an error!", error);
+          // Thông báo lỗi
+          notification.error({
+            message: "Error",
+            description: "Failed to add user or address.",
+          });
+        });
     }
   };
 
   const handleEdit = (user) => {
+    fetchAddress(user.email);
     setEditingUser(user);
     setNewUser({
       name: user.name,
       email: user.email,
       phone: user.phone,
-      address: user.address,
       image: user.image, // Đổi avatar thành image
       role: user.role,
-      password: user.password, // Hiển thị mật khẩu
-      profileImage: user.profileImage,
       gender: user.gender,
     });
     setShowPopup(true);
@@ -74,15 +121,20 @@ const UserManagement = () => {
 
   const resetForm = () => {
     setEditingUser(null);
+    setAddress({
+      number: "",
+      street: "",
+      ward: "",
+      district: "",
+      city: "",
+    });
     setNewUser({
       name: "",
       email: "",
       phone: "",
-      address: "",
       image: "", // Đổi avatar thành image
       role: "customer",
       password: "",
-      profileImage: "",
       gender: null,
     });
   };
@@ -92,6 +144,27 @@ const UserManagement = () => {
     resetForm(); // Reset form sau khi đóng modal
   };
 
+  const fetchAddress = async (email) => {
+    if (email) {
+      try {
+        const response = await fetch(`http://localhost:3000/address/${email}`);
+        if (response.ok) {
+          const data = await response.json();
+          setAddress({
+            number: data.number || "",
+            street: data.street || "",
+            ward: data.ward || "",
+            district: data.district || "",
+            city: data.city || "",
+          });
+        } else {
+          console.error("Error fetching address:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching address:", error);
+      }
+    }
+  };
   return (
     <div className="user-management-container">
       <Title level={2} className="user-management-title">
@@ -114,6 +187,8 @@ const UserManagement = () => {
         newUser={newUser}
         setNewUser={setNewUser}
         addUser={addUser}
+        address={address}
+        setAddress={setAddress}
         isEditing={editingUser !== null}
       />
       <Card>

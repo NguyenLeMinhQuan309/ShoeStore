@@ -3,19 +3,21 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import Cart from "../Cart/Cart";
 import "./Login_Signup.css";
-import { Input, Button, Modal, Popover } from "antd";
+import { Input, Button, Modal, Popover, notification } from "antd";
+import { LoginOutlined } from "@ant-design/icons";
 import UserInfoModal from "../UserInfo/UserInfo";
 import MyOrder from "../MyOrder/MyOrder";
 import PurchaseHistoryModal from "../PurchaseHistoryModal/PurchaseHistoryModal";
+
 const Login_Signup = () => {
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [isLogin, setIsLogin] = useState(true);
   const [user, setUser] = useState(null);
-  const [isRegistrationSuccess, setIsRegistrationSuccess] = useState(false);
   const [emailInputValue, setEmailInputValue] = useState("");
   const [passwordInputValue, setPasswordInputValue] = useState("");
   const [nameInputValue, setNameInputValue] = useState("");
+  const [phoneInputValue, setPhoneInputValue] = useState("");
   const [passwordConfirmInputValue, setPasswordConfirmInputValue] =
     useState("");
   const [isPersonalInfoModalVisible, setIsPersonalInfoModalVisible] =
@@ -23,6 +25,7 @@ const Login_Signup = () => {
   const [isOrderModalVisible, setIsOrderModalVisible] = useState(false);
   const [isPurchaseHistoryModalVisible, setIsPurchaseHistoryModalVisible] =
     useState(false);
+
   useEffect(() => {
     try {
       const storedUser = JSON.parse(localStorage.getItem("user"));
@@ -33,18 +36,17 @@ const Login_Signup = () => {
       console.error("Failed to parse user data:", error);
     }
   }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-  };
-
-  const handleSearchChange = (e) => {
-    setSearchTerm(e.target.value);
+    window.location.reload();
+    // navigate("/");
   };
 
   const showModal = () => {
     setIsModalVisible(true);
-    setIsLogin(true); // Reset to login form
+    setIsLogin(true);
   };
 
   const handleOk = () => {
@@ -52,8 +54,7 @@ const Login_Signup = () => {
     setEmailInputValue("");
     setPasswordInputValue("");
     setNameInputValue("");
-    setPasswordConfirmInputValue(""); // if added
-    setIsRegistrationSuccess(false);
+    setPasswordConfirmInputValue("");
   };
 
   const handleCancel = () => {
@@ -62,27 +63,33 @@ const Login_Signup = () => {
 
   const toggleForm = () => {
     setIsLogin(!isLogin);
-    setIsRegistrationSuccess(false); // Reset success state
-  };
-  const showPersonalInfoModal = () => {
-    setIsPersonalInfoModalVisible(true);
-  };
-  const showOrderModal = () => {
-    setIsOrderModalVisible(true);
   };
 
-  const handleOrderModalClose = () => {
-    setIsOrderModalVisible(false);
+  const openNotification = (type, message, description) => {
+    notification[type]({
+      message,
+      description,
+      duration: 3,
+    });
   };
 
-  const showHistoryModal = () => {
-    setIsPurchaseHistoryModalVisible(true);
-  };
-
-  const handleHistoryModal = () => {
-    setIsPurchaseHistoryModalVisible(false);
-  };
   const handleLogin = async () => {
+    if (!emailInputValue && !passwordInputValue) {
+      openNotification(
+        "error",
+        "Lỗi đăng nhập",
+        "Vui lòng nhập Email và Mật khẩu!"
+      );
+      return;
+    }
+    if (!emailInputValue) {
+      openNotification("error", "Lỗi đăng nhập", "Vui lòng nhập Email!");
+      return;
+    }
+    if (!passwordInputValue) {
+      openNotification("error", "Lỗi đăng nhập", "Vui lòng nhập Mật khẩu!");
+      return;
+    }
     try {
       const response = await axios.post("http://localhost:3000/user/login", {
         email: emailInputValue,
@@ -92,65 +99,115 @@ const Login_Signup = () => {
         window.location.href = "http://localhost:4000";
       } else {
         localStorage.setItem("user", JSON.stringify(response.data.user));
-        setUser(response.data.user); // Lưu user vào state để hiển thị trên UI
+        setUser(response.data.user);
+        openNotification(
+          "success",
+          "Đăng nhập thành công",
+          "Chào mừng bạn trở lại!"
+        );
+        handleOk();
+        window.location.reload();
       }
-      handleOk();
-
-      // Check if the user's email ends with @admin
     } catch (error) {
-      console.error("Login error:", error.response.data);
-      // Xử lý lỗi nếu cần, ví dụ như hiển thị thông báo cho người dùng
+      console.error("Login error:", error.response?.data);
+      openNotification(
+        "error",
+        "Đăng nhập thất bại",
+        "Tài khoản hoặc mật khẩu không đúng!!!!"
+      );
     }
   };
 
   const handleRegister = async () => {
+    // Check if required fields are empty
+    if (
+      !nameInputValue ||
+      !phoneInputValue ||
+      !emailInputValue ||
+      !passwordInputValue ||
+      !passwordConfirmInputValue
+    ) {
+      openNotification(
+        "error",
+        "Đăng ký thất bại",
+        "Vui lòng điền đầy đủ các trường thông tin."
+      );
+      return;
+    }
+
+    // Check if passwords match
+    if (passwordInputValue !== passwordConfirmInputValue) {
+      openNotification(
+        "error",
+        "Đăng ký thất bại",
+        "Mật khẩu không khớp. Vui lòng thử lại."
+      );
+      return;
+    }
+
     try {
-      const response = await axios.post("http://localhost:3000/user/signup", {
-        name: nameInputValue, // You'll need to manage this state
+      // Send the registration request
+      await axios.post("http://localhost:3000/user/signup", {
+        name: nameInputValue,
+        phone: phoneInputValue,
         email: emailInputValue,
-        password: passwordInputValue, // You'll need to manage this state
+        password: passwordInputValue,
       });
-      if (passwordInputValue !== passwordConfirmInputValue) {
-        console.error("Passwords do not match!");
-        return;
-      }
-      setIsRegistrationSuccess(true);
+
+      // Show success notification
+      openNotification(
+        "success",
+        "Đăng ký thành công",
+        "Bạn có thể đăng nhập ngay bây giờ!"
+      );
+
+      // Toggle the form or navigate as needed
       toggleForm();
     } catch (error) {
-      console.error("Registration error:", error.response.data);
-      // Handle error appropriately, e.g., show a message to the user
+      console.error("Registration error:", error.response?.data);
+
+      // Show error notification
+      openNotification(
+        "error",
+        "Đăng ký thất bại",
+        "Đã xảy ra lỗi trong quá trình đăng ký."
+      );
     }
   };
-  const updateUserInfo = (updatedUser) => {
-    setUser(updatedUser);
-    localStorage.setItem("user", JSON.stringify(updatedUser)); // Update local storage as well
-  };
-  const userMenuContent = (
-    <div className="propdown avt">
-      <Button type="link" onClick={showPersonalInfoModal}>
-        Thông tin cá nhân
-      </Button>
-      <Button type="link" onClick={showOrderModal}>
-        Đơn hàng của tôi
-      </Button>
-      <Button type="link" onClick={showHistoryModal}>
-        Lịch sử mua hàng
-      </Button>
-      <Button type="link" onClick={() => anavigate("/my-discount")}>
-        Ưu đãi của tôi
-      </Button>
-      <Button type="link" onClick={handleLogout}>
-        Đăng xuất
-      </Button>
-    </div>
-  );
 
   return (
     <div className="cart-login">
       <Cart />
       {user ? (
         <div className="user-info">
-          <Popover content={userMenuContent} trigger="hover">
+          <Popover
+            content={
+              <div className="propdown avt">
+                <Button
+                  type="link"
+                  onClick={() => setIsPersonalInfoModalVisible(true)}
+                >
+                  Thông tin cá nhân
+                </Button>
+                <Button
+                  type="link"
+                  onClick={() => setIsOrderModalVisible(true)}
+                >
+                  Đơn hàng của tôi
+                </Button>
+                <Button
+                  type="link"
+                  onClick={() => setIsPurchaseHistoryModalVisible(true)}
+                >
+                  Lịch sử mua hàng
+                </Button>
+                <Button type="link" onClick={handleLogout}>
+                  Đăng xuất
+                </Button>
+              </div>
+            }
+            trigger="hover"
+          >
             <img
               src={user?.image || "src/assets/default_avatar.png"}
               className="user-avatar"
@@ -160,12 +217,28 @@ const Login_Signup = () => {
           <span className="username">{user.name}</span>
         </div>
       ) : (
-        <Button type="dashed" onClick={showModal}>
+        <Button
+          icon={<LoginOutlined />}
+          color="default"
+          variant="outlined"
+          onClick={showModal}
+        >
           Đăng nhập
         </Button>
       )}
       <Modal
-        title={isLogin ? "Đăng nhập" : "Đăng ký"}
+        title={
+          <span
+            style={{
+              fontSize: "20px",
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+            }}
+          >
+            {isLogin ? "Đăng nhập" : "Đăng ký"}
+          </span>
+        }
         visible={isModalVisible}
         onOk={isLogin ? handleLogin : handleRegister}
         onCancel={handleCancel}
@@ -175,15 +248,15 @@ const Login_Signup = () => {
         {isLogin ? (
           <>
             <Input
+              required
               placeholder="Email"
               value={emailInputValue}
               onChange={(e) => setEmailInputValue(e.target.value)}
               style={{ marginBottom: "1rem" }}
             />
-
             <Input.Password
-              value={passwordInputValue}
               placeholder="Password"
+              value={passwordInputValue}
               onChange={(e) => setPasswordInputValue(e.target.value)}
             />
             <div style={{ marginTop: "1rem" }}>
@@ -196,9 +269,15 @@ const Login_Signup = () => {
         ) : (
           <>
             <Input
-              placeholder="Tên đầy đủ"
+              placeholder="Họ và Tên"
               value={nameInputValue}
               onChange={(e) => setNameInputValue(e.target.value)}
+              style={{ marginBottom: "1rem" }}
+            />
+            <Input
+              placeholder="Số điện thoại"
+              value={phoneInputValue}
+              onChange={(e) => setPhoneInputValue(e.target.value)}
               style={{ marginBottom: "1rem" }}
             />
             <Input
@@ -207,15 +286,14 @@ const Login_Signup = () => {
               onChange={(e) => setEmailInputValue(e.target.value)}
               style={{ marginBottom: "1rem" }}
             />
-
             <Input.Password
-              placeholder="Password"
+              placeholder="Mật khẩu"
               value={passwordInputValue}
               onChange={(e) => setPasswordInputValue(e.target.value)}
               style={{ marginBottom: "1rem" }}
             />
             <Input.Password
-              placeholder="Xác nhận Password"
+              placeholder="Xác nhận Mật khẩu"
               value={passwordConfirmInputValue}
               onChange={(e) => setPasswordConfirmInputValue(e.target.value)}
             />
@@ -232,19 +310,20 @@ const Login_Signup = () => {
         user={user}
         isPersonalInfoModalVisible={isPersonalInfoModalVisible}
         setIsPersonalInfoModalVisible={setIsPersonalInfoModalVisible}
-        onUserUpdate={updateUserInfo} // Pass the update function as a prop
+        onUserUpdate={setUser}
       />
       <MyOrder
         isVisible={isOrderModalVisible}
-        handleClose={handleOrderModalClose}
+        handleClose={() => setIsOrderModalVisible(false)}
         user={user}
       />
       <PurchaseHistoryModal
         isVisible={isPurchaseHistoryModalVisible}
-        handleClose={handleHistoryModal}
+        handleClose={() => setIsPurchaseHistoryModalVisible(false)}
         user={user}
       />
     </div>
   );
 };
+
 export default Login_Signup;

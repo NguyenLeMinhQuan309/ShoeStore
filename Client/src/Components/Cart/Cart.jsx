@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Popover, List, Avatar, Typography } from "antd";
+import { Popover, List, Avatar, Typography, notification } from "antd";
 import { ShoppingCartOutlined } from "@ant-design/icons";
 
 const { Text } = Typography;
@@ -40,7 +40,16 @@ const Cart = () => {
   }, []);
 
   const handleCartClick = () => {
-    window.location.href = "/cart"; // Redirect user to cart page
+    const user = localStorage.getItem("user");
+    if (!user) {
+      // Kiểm tra nếu người dùng chưa đăng nhập
+      notification.error({
+        message: "Chưa đăng nhập",
+        description: "Vui lòng đăng nhập để truy cập giỏ hàng.",
+      });
+    } else {
+      window.location.href = "/cart"; // Nếu người dùng đã đăng nhập, chuyển hướng đến trang giỏ hàng
+    }
   };
 
   const popoverContent = (
@@ -61,7 +70,11 @@ const Cart = () => {
                 <div>
                   <Text style={{ fontSize: "14px" }}>{item.name}</Text>
                   <div>
-                    <Text type="secondary">{`${item.color} | Size: ${item.size} | Quantity: ${item.quantity} | Price: ${item.price} VND`}</Text>
+                    <Text type="secondary">{`${item.color} | Size: ${
+                      item.size
+                    } | Quantity: ${item.quantity} | Price: ${formatNumber(
+                      item.price
+                    )} VND`}</Text>
                   </div>
                 </div>
               </div>
@@ -73,7 +86,7 @@ const Cart = () => {
       )}
     </div>
   );
-
+  const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num);
   return (
     <Popover content={popoverContent} title="Shopping Cart" trigger="hover">
       <ShoppingCartOutlined

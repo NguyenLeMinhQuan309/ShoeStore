@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Modal, List, Typography, Button, Input, notification } from "antd";
+import {
+  Modal,
+  List,
+  Typography,
+  Button,
+  Input,
+  notification,
+  Table,
+  Row,
+  Col,
+} from "antd";
 import "./OrderModal.css";
 import OrderSummary from "../OrderSummary/OrderSummary";
 import StatusModal from "../StatusModal/StatusModal";
@@ -11,9 +21,12 @@ const OrderModal = ({
   cartItems,
   setCartItems,
   totalPrice,
+  totalDiscount,
+  finalTotalPrice,
   user,
   onOrderSuccess,
 }) => {
+  const [totalAmount, setTotalAmount] = useState(totalPrice); // Local total state
   const [orderDetails, setOrderDetails] = useState(null);
   const [showOrderSummary, setShowOrderSummary] = useState(false);
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -27,7 +40,11 @@ const OrderModal = ({
     district: "",
     city: "",
   });
-
+  const [customer, setCustomer] = useState({
+    name: user?.name || "",
+    phone: user?.phone || "",
+  });
+  const [isEditing, setIsEditing] = useState(false); // Add isEditing state
   useEffect(() => {
     const fetchAddress = async () => {
       if (user) {
@@ -57,7 +74,13 @@ const OrderModal = ({
       fetchAddress();
     }
   }, [isVisible, user]);
-
+  const handleInputUserChange = (e) => {
+    const { name, value } = e.target;
+    setCustomer((prevCustomer) => ({
+      ...prevCustomer,
+      [name]: value,
+    }));
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setAddress((prevAddress) => ({
@@ -65,8 +88,78 @@ const OrderModal = ({
       [name]: value,
     }));
   };
+  const handleEditClick = () => {
+    setIsEditing(!isEditing); // Toggle edit mode
+    if (isEditing && !address.number) {
+      // If address is incomplete, prompt user to enter all fields
+      notification.info({
+        message: "Cập nhật thông tin địa chỉ",
+        description: "Vui lòng nhập đầy đủ thông tin địa chỉ trước khi lưu.",
+      });
+    }
+  };
+  const updateInventory = async () => {
+    try {
+      const updateRequests = cartItems.map((item) =>
+        fetch("http://localhost:3000/shoe/updateQuantity", {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            productId: item.id, // ID sản phẩm
+            color: item.color, // Màu sắc
+            size: item.size, // Size giày
+            quantity: item.quantity, // Số lượng mua
+            action: false, // Giảm số lượng tồn kho
+          }),
+        })
+      );
 
-  const handleSubmit = async () => {
+      const responses = await Promise.all(updateRequests);
+
+      for (const response of responses) {
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error("Error updating inventory:", errorData.message);
+          notification.error({
+            message: "Lỗi cập nhật tồn kho",
+            description: errorData.message,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error updating inventory:", error);
+      notification.error({
+        message: "Lỗi kết nối",
+        description: "Không thể kết nối đến máy chủ, vui lòng kiểm tra lại.",
+      });
+    }
+  };
+
+  const handleSubmit = async (pay) => {
+    if (!customer.name || !customer.phone) {
+      notification.error({
+        message: "Thông tin người đặt không đầy đủ",
+        description: "Vui lòng nhập đầy đủ tên và số điện thoại.",
+      });
+      return;
+    }
+
+    if (
+      !address.number ||
+      !address.street ||
+      !address.ward ||
+      !address.district ||
+      !address.city
+    ) {
+      notification.error({
+        message: "Thông tin địa chỉ không đầy đủ",
+        description: "Vui lòng nhập đầy đủ thông tin địa chỉ.",
+      });
+      return;
+    }
+
     try {
       const addressString = `${address.number}, ${address.street}, ${address.ward}, ${address.district}, ${address.city}`;
 
@@ -77,14 +170,17 @@ const OrderModal = ({
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            address,
-          }),
+          body: JSON.stringify({ address }),
         }
       );
 
       if (!addressResponse.ok) {
-        console.error("Error saving address:", addressResponse.statusText);
+        const errorData = await addressResponse.json();
+        notification.error({
+          message: "Lỗi lưu địa chỉ",
+          description:
+            errorData.message || "Không thể lưu địa chỉ, vui lòng thử lại.",
+        });
         return null;
       }
 
@@ -95,35 +191,52 @@ const OrderModal = ({
         },
         body: JSON.stringify({
           email: user ? user.email : "Chưa đăng nhập",
-          name: user.name,
-          phone: user.phone,
+          name: customer.name,
+          phone: customer.phone,
           product: cartItems,
-          total: totalPrice,
+          total: totalAmount,
           address: addressString,
+          paymenttype: pay ? "Zalo Pay" : "Tiền mặt",
         }),
       });
 
       if (orderResponse.ok) {
         const orderData = await orderResponse.json();
         setOrderId(orderData.order.id);
-        setOrderDetails(orderData.order); // Still set order details
+        setOrderDetails(orderData.order);
         setShowOrderSummary(true);
-        handleClose(); // Close the order modal
-        // Call API to clear the cart
-        await fetch(`http://localhost:3000/cart/delete`, {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email: user.email }),
-        });
+        handleClose();
+        await updateInventory();
+
+        const deleteCartResponse = await fetch(
+          `http://localhost:3000/cart/delete`,
+          {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ email: user.email }),
+          }
+        );
+
+        if (!deleteCartResponse.ok) {
+          console.error("Error clearing cart:", deleteCartResponse.statusText);
+          notification.warning({
+            message: "Lỗi xóa giỏ hàng",
+            description:
+              "Giỏ hàng không được xóa hoàn toàn, vui lòng kiểm tra lại.",
+          });
+        }
+
         setCartItems([]);
-        return orderData.order.id; // Return orderId directly
+        return orderData.order.id;
       } else {
-        console.error("Error saving order:", orderResponse.statusText);
+        const errorData = await orderResponse.json();
+        console.error("Error saving order:", errorData.message);
         notification.error({
           message: "Lỗi khi đặt hàng",
-          description: "Có lỗi xảy ra, vui lòng thử lại sau.",
+          description:
+            errorData.message || "Có lỗi xảy ra, vui lòng thử lại sau.",
         });
         return null;
       }
@@ -137,134 +250,128 @@ const OrderModal = ({
     }
   };
 
-  const handlePayment = async () => {
-    const orderId = await handleSubmit(); // Wait for handleSubmit and retrieve orderId
+  useEffect(() => {
+    const costData = [
+      {
+        key: "1",
+        item: "Tiền hàng",
+        cost: totalPrice, // Assuming totalPrice is the item cost
+      },
+      {
+        key: "2",
+        item: "Giá giảm",
+        cost: -totalDiscount, // Assuming totalPrice is the item cost
+      },
+      {
+        key: "3",
+        item: "Phí vận chuyển",
+        cost: 30000, // Example shipping cost
+      },
+      {
+        key: "4",
+        item: "Thuế (10%)",
+        cost: 0.1 * finalTotalPrice, // Example tax
+      },
+    ];
 
-    if (!orderId) {
-      notification.error({
-        message: "Lỗi đơn hàng",
-        description: "Đơn hàng chưa được tạo thành công. Vui lòng thử lại.",
-      });
-      return;
-    }
-
-    try {
-      const response = await fetch("http://localhost:3000/payment", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          amount: totalPrice,
-          order_id: orderId, // Use orderId directly
-          item: cartItems,
-        }),
-      });
-
-      if (response.ok) {
-        const paymentData = await response.json();
-        const paymentUrl = paymentData.order_url; // Adjust this based on your backend response structure
-        window.open(paymentUrl, "_blank"); // Redirect to ZaloPay payment page in a new tab
-        console.log("transid" + paymentData.app_trans_id);
-        setTransid(paymentData.app_trans_id);
-        setShowStatusModal(true);
-      } else {
-        notification.error({
-          message: "Lỗi khi tạo thanh toán",
-          description: "Không thể kết nối đến ZaloPay. Vui lòng thử lại sau.",
-        });
-      }
-    } catch (error) {
-      console.error("Error initiating ZaloPay payment:", error);
-      notification.error({
-        message: "Lỗi kết nối",
-        description: "Không thể kết nối đến máy chủ, vui lòng kiểm tra lại.",
-      });
-    }
-  };
-
-  const handleStatus = async (transid) => {
-    if (!transid) {
-      notification.error({
-        message: "Lỗi đơn hàng",
-        // description: "Đơn hàng chưa được tạo thành công. Vui lòng thử lại.",
-      });
-      return;
-    }
-    try {
-      const response = await fetch("http://localhost:3000/payment/${transid}", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const paymentData = await response.json();
-        const paymentUrl = paymentData.order_url; // Adjust this based on your backend response structure
-        window.open(paymentUrl, "_blank"); // Redirect to ZaloPay payment page in a new tab
-      } else {
-        notification.error({
-          message: "Lỗi khi tạo thanh toán",
-          description: "Không thể kết nối đến ZaloPay. Vui lòng thử lại sau.",
-        });
-      }
-    } catch (error) {
-      console.error("Error initiating ZaloPay payment:", error);
-      notification.error({
-        message: "Lỗi kết nối",
-        description: "Không thể kết nối đến máy chủ, vui lòng kiểm tra lại.",
-      });
-    }
-  };
-
+    const total = costData.reduce((acc, curr) => acc + curr.cost, 0);
+    setTotalAmount(total);
+  }, [finalTotalPrice]);
+  const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num);
   return (
     <div>
       <Modal
+        width={800}
         visible={isVisible}
         onCancel={handleClose}
-        footer={null} // Hide footer buttons if not needed
+        footer={null}
       >
-        <Title level={4}>Thông tin người đặt</Title>
+        {/* <Title level={4}>Tài khoản người đặt</Title>
         <p>Email: {user ? user.email : "Chưa đăng nhập"}</p>
         <p>Tên: {user ? user.name : "Chưa đăng nhập"}</p>
-        <p>Số điện thoại: {user ? user.phone : "Chưa đăng nhập"}</p>
-        <Title level={4}>Địa chỉ giao hàng</Title>
-        <Input
-          placeholder="Số nhà"
-          name="number"
-          value={address.number}
-          onChange={handleInputChange}
-          style={{ marginBottom: "10px" }}
-        />
-        <Input
-          placeholder="Tên đường"
-          name="street"
-          value={address.street}
-          onChange={handleInputChange}
-          style={{ marginBottom: "10px" }}
-        />
-        <Input
-          placeholder="Phường"
-          name="ward"
-          value={address.ward}
-          onChange={handleInputChange}
-          style={{ marginBottom: "10px" }}
-        />
-        <Input
-          placeholder="Quận"
-          name="district"
-          value={address.district}
-          onChange={handleInputChange}
-          style={{ marginBottom: "10px" }}
-        />
-        <Input
-          placeholder="Thành phố"
-          name="city"
-          value={address.city}
-          onChange={handleInputChange}
-          style={{ marginBottom: "10px" }}
-        />
+        <p>Số điện thoại: {user ? user.phone : "Chưa đăng nhập"}</p> */}
+
+        <Row gutter={16}>
+          {/* Cột thông tin người đặt */}
+          <Col span={12}>
+            <Title level={4}>Thông tin người đặt</Title>
+            <Input
+              placeholder="Tên người đặt"
+              name="name"
+              value={customer.name}
+              onChange={handleInputUserChange}
+              style={{ marginBottom: "10px" }}
+            />
+            <Input
+              placeholder="Số điện thoại"
+              name="phone"
+              value={customer.phone}
+              onChange={handleInputUserChange}
+              style={{ marginBottom: "10px" }}
+            />
+          </Col>
+
+          {/* Cột địa chỉ giao hàng */}
+          <Col span={12}>
+            <Title level={4}>
+              Địa chỉ giao hàng
+              <Button onClick={handleEditClick} style={{ marginLeft: "10px" }}>
+                {isEditing ? "Lưu" : "Chỉnh sửa"}
+              </Button>
+            </Title>
+
+            {isEditing ? (
+              <>
+                <Input
+                  placeholder="Số nhà"
+                  name="number"
+                  value={address.number}
+                  onChange={handleInputChange}
+                  style={{ marginBottom: "10px" }}
+                />
+                <Input
+                  placeholder="Tên đường"
+                  name="street"
+                  value={address.street}
+                  onChange={handleInputChange}
+                  style={{ marginBottom: "10px" }}
+                />
+                <Input
+                  placeholder="Phường"
+                  name="ward"
+                  value={address.ward}
+                  onChange={handleInputChange}
+                  style={{ marginBottom: "10px" }}
+                />
+                <Input
+                  placeholder="Quận"
+                  name="district"
+                  value={address.district}
+                  onChange={handleInputChange}
+                  style={{ marginBottom: "10px" }}
+                />
+                <Input
+                  placeholder="Thành phố"
+                  name="city"
+                  value={address.city}
+                  onChange={handleInputChange}
+                  style={{ marginBottom: "10px" }}
+                />
+              </>
+            ) : (
+              <p>
+                {address.number ||
+                address.street ||
+                address.ward ||
+                address.district ||
+                address.city
+                  ? `${address.number}, ${address.street}, ${address.ward}, ${address.district}, ${address.city}`
+                  : "Chưa có địa chỉ"}
+              </p>
+            )}
+          </Col>
+        </Row>
+
         <Title level={4}>Thông tin sản phẩm</Title>
         <List
           bordered
@@ -285,14 +392,53 @@ const OrderModal = ({
               <span>
                 {item.color} / size: {item.size}
               </span>
-              <span>
-                {item.price} VND x {item.quantity}
-              </span>
+
+              <div
+                style={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "start",
+                }}
+              >
+                {item.discountPercentage > 0 && (
+                  <span
+                    style={{
+                      textDecoration: "line-through",
+                      color: "gray",
+                    }}
+                  >
+                    {formatNumber(item.price)} VND
+                  </span>
+                )}
+                <span>
+                  {formatNumber(item.finalPrice)} VND x {item.quantity}
+                </span>
+              </div>
             </List.Item>
           )}
         />
+        <Title level={4}>Chi phí</Title>
+        <Table
+          dataSource={[
+            { key: "1", item: "Tiền hàng", cost: totalPrice },
+            { key: "2", item: "Giá giảm", cost: -totalDiscount },
+            { key: "3", item: "Phí vận chuyển", cost: 30000 },
+            { key: "4", item: "Thuế (10%)", cost: 0.1 * totalPrice },
+          ]}
+          pagination={false}
+          columns={[
+            { title: "Mặt hàng", dataIndex: "item", key: "item" },
+            {
+              title: "Giá (VND)",
+              dataIndex: "cost",
+              key: "cost",
+              render: (text) => <span>{text.toLocaleString()}</span>,
+            },
+          ]}
+        />
+
         <Title level={4} style={{ textAlign: "right" }}>
-          Tổng tiền: {totalPrice} VND
+          Tổng tiền: {totalAmount.toLocaleString()} VND
         </Title>
         <Title level={4}>Phương thức thanh toán</Title>
         <p>Chọn phương thức thanh toán của bạn</p>
@@ -300,25 +446,25 @@ const OrderModal = ({
           <Button
             type="primary"
             style={{ margin: "5px" }}
-            onClick={handlePayment}
+            onClick={() => handleSubmit(true)} // Correct usage
           >
             Zalo Pay
           </Button>
           <Button
             type="primary"
             style={{ margin: "5px" }}
-            onClick={handleSubmit}
+            onClick={() => handleSubmit(false)}
           >
             Thanh toán khi nhận hàng
           </Button>
         </div>
       </Modal>
+
       {/* Hiển thị modal đơn hàng */}
       <OrderSummary
         isVisible={showOrderSummary}
         handleClose={() => setShowOrderSummary(false)}
-        orderId={orderId} // Truyền orderId vào
-        user={user}
+        orderId={orderId}
         address={address}
         paid={paid}
         setPaid={setPaid}

@@ -21,13 +21,14 @@
 .product-area .product {
   display: grid; /* Biến khu vực sản phẩm thành flex container */
   grid-template-columns: repeat(3, 1fr); /* 4 sản phẩm mỗi hàng */
-  grid-gap: 10px; /* Khoảng cách giữa các sản phẩm */
+  grid-row-gap: 50px; /* Khoảng cách giữa các sản phẩm */
+  grid-column-gap: 10px;
   background-color: white;
 }
 .pagination {
   display: flex; /* Use flexbox for pagination */
   justify-content: center; /* Center horizontally */
-  margin-top: 20px; /* Space above pagination */
+  margin-top: 60px; /* Space above pagination */
   width: 100%; /* Full width of the container */
   align-self: flex-end; /* Align pagination to the bottom */
 }

@@ -8,6 +8,8 @@
   margin-right: 1px;
   margin-left: auto;
   border-radius: 20px;
+  background-color: transparent;
+  color: white;
 }
 .carticon {
   font-size: 36px;

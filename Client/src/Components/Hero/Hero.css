@@ -4,7 +4,7 @@
   align-items: center; /* Căn giữa theo chiều dọc */
   overflow: hidden; /* Giấu nội dung vượt quá */
   position: relative;
-  margin: 0px 30px;
+  /* margin: 0px 30px; */
   border-radius: 0 0 20px 20px;
   /* height: 550px; */
 }
@@ -19,14 +19,12 @@
   left: 15%; /* Đặt button ở giữa theo chiều ngang */
   transform: translate(-50%, -50%); /* Đưa button về giữa */
   padding: 10px 20px; /* Thêm khoảng đệm cho button */
-  background-color: #007bff; /* Màu nền của button */
   color: white; /* Màu chữ của button */
-  border: none; /* Không có viền */
-  border-radius: 30px; /* Bo góc button */
+  border: 1px solid #ffffff;
   cursor: pointer; /* Đổi con trỏ khi hover */
   font-size: 30px;
-  color: black;
-  background-color: #efebea;
+  height: auto;
+  background-color: transparent;
 }
 
 .hero-button:hover {

@@ -7,6 +7,7 @@ import ProductManagement from "./Pages/ProductManagement";
 import CategoryManagement from "./Pages/CategoryManagement";
 import OrderManagement from "./Pages/OrderManagement";
 import StatisticsProductPage from "./Pages/StatistiscManagement";
+import CommentManagementComponent from "./Pages/CommentManagement";
 const App = () => {
   const [collapsed, setCollapsed] = useState(true);
 
@@ -33,7 +34,8 @@ const App = () => {
               <Route path="/product" element={<ProductManagement />} />
               <Route path="/category" element={<CategoryManagement />} />
               <Route path="/order" element={<OrderManagement />} />
-              <Route path="/statistics" element={<StatisticsProductPage />} />
+              <Route path="/" element={<StatisticsProductPage />} />
+              <Route path="/comment" element={<CommentManagementComponent />} />
               {/* Thêm các route khác nếu cần */}
             </Routes>
           </Layout.Content>

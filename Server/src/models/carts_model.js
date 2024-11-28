@@ -10,7 +10,7 @@ const Cart = new Schema({
   size: { type: Number },
   quantity: { type: Number },
   total: { type: Number },
-  image: [{ type: String }],
+  image: { type: String },
 });
 
 module.exports = mongoose.model("Carts", Cart);

@@ -65,27 +65,36 @@ class OrderController {
   async updateOrderStatus(req, res) {
     const allowedStatuses = [
       "Chờ duyệt",
+      "Đã duyệt",
       "Đang chuẩn bị hàng",
       "Đang giao",
       "Đã giao",
       "Đã hủy",
     ];
+
     if (!allowedStatuses.includes(req.body.status)) {
       return res.status(400).json({ message: "Invalid status" });
     }
 
     try {
-      const order = await Order.findByIdAndUpdate(
-        req.params.id,
-        {
-          status: req.body.status,
-          paid: req.body.status == "Đã giao" ? true : false,
-        },
-        { new: true }
-      );
+      const updateData = {
+        status: req.body.status,
+        paid: req.body.status === "Đã giao" ? true : false,
+      };
+
+      // Nếu trạng thái là "Đã giao", cập nhật ngày `dateship` thành ngày hiện tại
+      if (req.body.status === "Đã giao") {
+        updateData.shipdate = new Date();
+      }
+
+      const order = await Order.findByIdAndUpdate(req.params.id, updateData, {
+        new: true,
+      });
+
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
+
       res.status(200).json({ message: "Order status updated", order });
     } catch (error) {
       res.status(500).json({ message: "Failed to update order status", error });
@@ -132,27 +141,30 @@ class OrderController {
 
     try {
       // Tìm đơn hàng theo ID
-      const order = await Order.findById(orderId);
+      const order = await Order.findOne({ id: orderId });
 
       if (!order) {
         return res.status(404).json({ message: "Đơn hàng không tồn tại." });
       }
 
       // Kiểm tra trạng thái đơn hàng trước khi gửi yêu cầu hủy
-      if (order.status === "Đã giao" || order.status === "Đã hủy") {
+      if (
+        order.status === "Đã giao" ||
+        order.status === "Đã hủy" ||
+        order.status === "Đang giao" ||
+        order.paymenttype === "Zalo Pay"
+      ) {
         return res.status(400).json({ message: "Không thể hủy đơn hàng này." });
       }
 
-      // Gửi yêu cầu hủy (thay đổi trạng thái hoặc lưu vào một bảng yêu cầu hủy nếu cần)
-      // Ví dụ, ta có thể thêm một thuộc tính mới vào đơn hàng để theo dõi yêu cầu hủy
-      const newCancelRequest = (order.cancelRequest = true); // hoặc tạo một bảng riêng cho yêu cầu hủy
+      // Cập nhật trạng thái đơn hàng
+      order.status = "Đã hủy";
+
+      // Lưu lại thay đổi và đợi kết quả
       await order.save();
 
-      // Gửi thông báo tới admin (bạn có thể sử dụng email hoặc hệ thống thông báo)
-      // Ví dụ: Gửi thông báo qua email tới admin
-      // await sendEmailToAdmin(order); // Hàm gửi email tới admin
-
-      res.status(200).json({ message: "Yêu cầu hủy đơn hàng đã được gửi." });
+      // Trả về đơn hàng đã cập nhật
+      res.status(200).json(order);
     } catch (error) {
       console.error(error);
       res.status(500).json({ message: "Đã xảy ra lỗi, vui lòng thử lại." });

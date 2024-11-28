@@ -7,6 +7,8 @@ import {
   AppstoreOutlined,
   OrderedListOutlined,
   SettingOutlined,
+  MessageOutlined,
+  LogoutOutlined, // Add the comment icon
 } from "@ant-design/icons";
 import { Link } from "react-router-dom";
 
@@ -15,6 +17,15 @@ const { Sider } = Layout;
 const Sidebar = ({ collapsed }) => {
   // Định nghĩa các mục menu
   const items = [
+    {
+      key: "5",
+      icon: <SettingOutlined style={{ color: "#000" }} />,
+      label: (
+        <Link to="/" style={{ color: "#000" }}>
+          Thống kê doanh thu
+        </Link>
+      ),
+    },
     {
       key: "1",
       icon: <UserOutlined style={{ color: "#000" }} />,
@@ -52,11 +63,26 @@ const Sidebar = ({ collapsed }) => {
       ),
     },
     {
-      key: "5",
-      icon: <SettingOutlined style={{ color: "#000" }} />,
+      key: "6",
+      icon: <MessageOutlined style={{ color: "#000" }} />, // Comment icon
       label: (
-        <Link to="/statistics" style={{ color: "#000" }}>
-          Thống kê doanh thu
+        <Link to="/comment" style={{ color: "#000" }}>
+          Quản lý bình luận
+        </Link>
+      ),
+    },
+    {
+      key: "7",
+      icon: <LogoutOutlined style={{ color: "#000" }} />,
+      label: (
+        <Link
+          style={{ color: "#000" }}
+          onClick={() => {
+            // Thực hiện đăng xuất (nếu có) và chuyển hướng đến trang đăng nhập hoặc trang khác
+            window.location.href = "http://localhost:5173/"; // Điều hướng đến trang đăng nhập
+          }}
+        >
+          Đăng xuất
         </Link>
       ),
     },
@@ -74,7 +100,7 @@ const Sidebar = ({ collapsed }) => {
       </div>
       <Menu
         mode="inline"
-        defaultSelectedKeys={["1"]}
+        defaultSelectedKeys={["5"]}
         items={items} // Sử dụng items để định nghĩa các mục menu
         style={{ background: "#f5f5f5", color: "#000" }} // Nền menu và màu chữ đen
         theme="light" // Để đảm bảo menu có nền sáng

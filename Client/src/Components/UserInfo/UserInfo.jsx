@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import { Modal, Input, Form, Tooltip, Select } from "antd";
+import {
+  Modal,
+  Input,
+  Form,
+  Row,
+  Col,
+  Tooltip,
+  Select,
+  notification,
+  Button,
+} from "antd";
+
 import axios from "axios";
 
 const { Option } = Select;
@@ -26,6 +37,12 @@ const UserInfoModal = ({
 
   const [initialValues, setInitialValues] = useState({});
   const [isImageModalVisible, setIsImageModalVisible] = useState(false);
+  const [isPasswordModalVisible, setIsPasswordModalVisible] = useState(false);
+  const [passwordValues, setPasswordValues] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
   useEffect(() => {
     if (user) {
@@ -82,6 +99,36 @@ const UserInfoModal = ({
     }
   };
 
+  const handlePasswordChangeModalCancel = () => {
+    setIsPasswordModalVisible(false);
+  };
+
+  const handlePasswordChange = async () => {
+    // Logic for handling password change
+    if (passwordValues.newPassword !== passwordValues.confirmPassword) {
+      openNotification("error", "Mật khẩu mới không khớp.");
+      return;
+    }
+
+    try {
+      // Call API to update password
+      const response = await axios.put(
+        `http://localhost:3000/user/update-password/${user._id}`,
+        {
+          oldPassword: passwordValues.oldPassword,
+          newPassword: passwordValues.newPassword,
+          confirmPassword: passwordValues.confirmPassword,
+        }
+      );
+
+      openNotification("success", "Mật khẩu đã được thay đổi.");
+      setIsPasswordModalVisible(false); // Close password change modal
+    } catch (error) {
+      console.error("Error changing password:", error);
+      openNotification("error", "Đổi mật khẩu thất bại. Vui lòng thử lại.");
+    }
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormValues({ ...formValues, [name]: value });
@@ -123,7 +170,6 @@ const UserInfoModal = ({
         }
       );
 
-      console.log("Updated user info:", userResponse.data);
       setFormValues({
         ...formValues,
         image: userResponse.data.user.image,
@@ -141,29 +187,34 @@ const UserInfoModal = ({
       // Try to update the address
       try {
         await axios.put(
-          `http://localhost:3000/address/${user.email}`, // Use email to identify the address
+          `http://localhost:3000/address/${user.email}`,
           addressPayload
         );
-        console.log("Address updated successfully");
       } catch (updateError) {
-        // If the update fails, create a new address
         if (updateError.response?.status === 404) {
           await axios.post(`http://localhost:3000/address`, {
             email: user.email,
             ...addressPayload,
           });
-          console.log("New address created successfully");
         } else {
           console.error("Error updating address:", updateError);
-          alert("There was an error updating the address. Please try again.");
+          openNotification(
+            "error",
+            "Cập nhật địa chỉ thất bại. Vui lòng thử lại."
+          );
         }
       }
 
       onUserUpdate(userResponse.data.user);
+      localStorage.setItem("user", JSON.stringify(userResponse.data.user));
       setIsEditing(false);
+      openNotification("success", "Cập nhật thông tin tài khoản thành công!");
     } catch (error) {
       console.error("Error updating user info:", error);
-      alert("There was an error updating the user info. Please try again.");
+      openNotification(
+        "error",
+        "Cập nhật thông tin tài khoản thất bại. Vui lòng thử lại."
+      );
     }
   };
 
@@ -177,6 +228,13 @@ const UserInfoModal = ({
     setIsImageModalVisible(false);
   };
 
+  const openNotification = (type, message) => {
+    notification[type]({
+      message,
+      placement: "topRight",
+    });
+  };
+
   return (
     <>
       <Modal
@@ -186,6 +244,7 @@ const UserInfoModal = ({
         onOk={isEditing ? handleSave : handlePersonalInfoModalOk}
         okText={isEditing ? "Lưu" : "Chỉnh sửa"}
         cancelText="Thoát"
+        width={800}
         closable={false}
       >
         <div
@@ -195,7 +254,7 @@ const UserInfoModal = ({
             marginBottom: "15px",
           }}
         >
-          <Tooltip title="Sửa" placement="bottom">
+          <Tooltip title={isEditing ? "Sửa" : ""} placement="bottom">
             <div
               style={{ cursor: "pointer" }}
               onClick={(e) => {
@@ -218,8 +277,10 @@ const UserInfoModal = ({
                   cursor: "pointer",
                 }}
                 onClick={(e) => {
-                  e.stopPropagation();
-                  showImageModal();
+                  if (!isEditing) {
+                    e.stopPropagation();
+                    showImageModal();
+                  }
                 }}
               />
             </div>
@@ -234,105 +295,205 @@ const UserInfoModal = ({
           <div>
             {isEditing ? (
               <Form layout="vertical">
-                <Form.Item label="Tên">
-                  <Input
-                    name="name"
-                    value={formValues.name}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Email">
-                  <Input
-                    name="email"
-                    value={formValues.email}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Giới tính">
-                  <Select
-                    name="gender"
-                    value={formValues.gender}
-                    onChange={handleGenderChange}
-                  >
-                    <Option value={0}>Nam</Option>
-                    <Option value={1}>Nữ</Option>
-                  </Select>
-                </Form.Item>
-                <Form.Item label="Số điện thoại">
-                  <Input
-                    name="phone"
-                    value={formValues.phone}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Số nhà">
-                  <Input
-                    name="number"
-                    value={formValues.number}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Đường">
-                  <Input
-                    name="street"
-                    value={formValues.street}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Phường">
-                  <Input
-                    name="ward"
-                    value={formValues.ward}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Quận">
-                  <Input
-                    name="district"
-                    value={formValues.district}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
-                <Form.Item label="Thành phố">
-                  <Input
-                    name="city"
-                    value={formValues.city}
-                    onChange={handleInputChange}
-                  />
-                </Form.Item>
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item label="Tên">
+                      <Input
+                        name="name"
+                        value={formValues.name}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Email">
+                      <Input
+                        disabled
+                        name="email"
+                        value={formValues.email}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Giới tính">
+                      <Select
+                        name="gender"
+                        value={formValues.gender}
+                        onChange={handleGenderChange}
+                      >
+                        <Option value={0}>Nam</Option>
+                        <Option value={1}>Nữ</Option>
+                      </Select>
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Số điện thoại">
+                      <Input
+                        name="phone"
+                        value={formValues.phone}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Số nhà">
+                      <Input
+                        name="number"
+                        value={formValues.number}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Đường">
+                      <Input
+                        name="street"
+                        value={formValues.street}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Phường">
+                      <Input
+                        name="ward"
+                        value={formValues.ward}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Quận">
+                      <Input
+                        name="district"
+                        value={formValues.district}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item label="Thành phố">
+                      <Input
+                        name="city"
+                        value={formValues.city}
+                        onChange={handleInputChange}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
               </Form>
             ) : (
               <div>
-                <p>Tên: {formValues?.name}</p>
-                <p>Email: {formValues?.email}</p>
-                <p>Giới tính: {formValues?.gender === 0 ? "Nam" : "Nữ"}</p>
-                <p>Số điện thoại: {formValues?.phone}</p>
+                <p>
+                  <strong>Tên:</strong> {user?.name}
+                </p>
+                <p>
+                  <strong>Email:</strong> {user?.email}
+                </p>
+                <p>
+                  <strong>Giới tính:</strong>{" "}
+                  {formValues.gender === 0 ? "Nam" : "Nữ"}
+                </p>
+                <p>
+                  <strong>Số điện thoại:</strong> {formValues.phone}
+                </p>
                 <p>
                   Địa chỉ:{" "}
-                  {`${formValues.number}, ${formValues.street}, ${formValues.ward}, ${formValues.district}, ${formValues.city}`}
+                  {formValues.number ||
+                  formValues.street ||
+                  formValues.ward ||
+                  formValues.district ||
+                  formValues.city
+                    ? `${formValues.number}, ${formValues.street}, ${formValues.ward}, ${formValues.district}, ${formValues.city}`
+                    : "Địa chỉ chưa được cập nhật"}
                 </p>
               </div>
+            )}
+            {/* Đổi mật khẩu button */}
+            {!isEditing ? (
+              <Button
+                type="link"
+                onClick={() => setIsPasswordModalVisible(true)}
+              >
+                Đổi mật khẩu
+              </Button>
+            ) : (
+              ""
             )}
           </div>
         </div>
       </Modal>
 
-      {/* Modal for displaying enlarged image */}
+      {/* Modal đổi mật khẩu */}
       <Modal
-        visible={isImageModalVisible}
-        onCancel={handleImageModalCancel}
-        footer={null}
-        width={300}
+        title={
+          <span
+            style={{
+              fontSize: "20px",
+              display: "flex",
+              justifyContent: "center",
+              width: "100%",
+            }}
+          >
+            Đổi mật khẩu
+          </span>
+        }
+        visible={isPasswordModalVisible}
+        onCancel={handlePasswordChangeModalCancel}
+        onOk={handlePasswordChange}
+        cancelText="Hủy"
+        okText="Đổi mật khẩu"
       >
-        <img
-          src={
-            formValues.image && formValues.image instanceof File
-              ? URL.createObjectURL(formValues.image)
-              : formValues.image || "src/assets/default_avatar.png"
-          }
-          alt="Enlarged Avatar"
-          style={{ width: "100%", height: "auto" }}
-        />
+        <Form layout="vertical">
+          <Form.Item
+            label="Mật khẩu cũ"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu cũ!" }]}
+          >
+            <Input.Password
+              name="oldPassword"
+              value={passwordValues.oldPassword}
+              onChange={(e) =>
+                setPasswordValues({
+                  ...passwordValues,
+                  oldPassword: e.target.value,
+                })
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label="Mật khẩu mới"
+            rules={[{ required: true, message: "Vui lòng nhập mật khẩu mới!" }]}
+          >
+            <Input.Password
+              name="newPassword"
+              value={passwordValues.newPassword}
+              onChange={(e) =>
+                setPasswordValues({
+                  ...passwordValues,
+                  newPassword: e.target.value,
+                })
+              }
+            />
+          </Form.Item>
+          <Form.Item
+            label="Xác nhận mật khẩu"
+            rules={[
+              { required: true, message: "Vui lòng xác nhận mật khẩu mới!" },
+            ]}
+          >
+            <Input.Password
+              name="confirmPassword"
+              value={passwordValues.confirmPassword}
+              onChange={(e) =>
+                setPasswordValues({
+                  ...passwordValues,
+                  confirmPassword: e.target.value,
+                })
+              }
+            />
+          </Form.Item>
+        </Form>
       </Modal>
     </>
   );

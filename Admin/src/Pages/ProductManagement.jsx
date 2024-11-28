@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
-import { Button, Card, Typography, notification } from "antd"; // Import notification for user feedback
+import { Button, Card, Typography, notification } from "antd";
 import axios from "axios";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import ProductTable from "../components/ProductTable/ProductTable";
 import AddProductModal from "../components/AddProductModal/AddProductModal";
+import DiscountModal from "../components/DiscountModal/DiscountModal";
+import * as XLSX from "xlsx";
 import "./css/ProductManagement.css";
 
 const { Title } = Typography;
@@ -29,20 +31,28 @@ const BRANDS = [
   "Saucony",
   "New Balance",
 ];
+
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
     name: "",
     category: "",
     brand: "",
-    size: [],
-    price: 0,
+
+    gender: 0,
     description: "",
-    stock: 0,
-    images: [{ imageUrls: [], color: "" }], // Ensure at least one image object
+    images: [
+      {
+        imageUrls: [],
+        color: "",
+        price: 0,
+        stock: [{ size: "", quantity: 0 }],
+      },
+    ],
   });
 
   const [showPopup, setShowPopup] = useState(false);
+  const [showDiscountModal, setShowDiscountModal] = useState(false); // State để hiển thị Discount Modal
 
   // Fetch products
   useEffect(() => {
@@ -51,23 +61,17 @@ const ProductManagement = () => {
       .then((response) => setProducts(response.data))
       .catch((error) => console.error("There was an error!", error));
   }, []);
-
-  // Add new product
   const addProduct = (product) => {
-    console.log("Product to be added:", product); // Debugging
     if (
       !product.name ||
       !product.category ||
       !product.brand ||
-      !product.size.length ||
-      product.price <= 0 ||
-      product.stock < 0
+      product.gender <= 0
     ) {
-      console.error("All required fields must be filled correctly.");
       notification.error({
         message: "Error",
         description: "All required fields must be filled correctly.",
-      }); // Display error notification
+      });
       return;
     }
 
@@ -75,33 +79,44 @@ const ProductManagement = () => {
     formData.append("name", product.name);
     formData.append("category", product.category);
     formData.append("brand", product.brand);
-    formData.append("size", product.size);
-    formData.append("price", product.price);
+    formData.append("gender", product.gender);
     formData.append("description", product.description);
-    formData.append("stock", product.stock);
 
-    // Append each image with its corresponding color to the form data
     if (Array.isArray(product.images)) {
       product.images.forEach((imageObj) => {
-        console.log("Image Object:", imageObj); // Debugging
-
-        if (imageObj && imageObj.imageUrls && imageObj.imageUrls.length > 0) {
+        if (
+          imageObj &&
+          imageObj.imageUrls &&
+          imageObj.imageUrls.length > 0 &&
+          imageObj.price > 0 // Kiểm tra giá của từng màu
+        ) {
           formData.append("color", imageObj.color);
+          formData.append("price", imageObj.price); // Thêm giá theo màu
+
           imageObj.imageUrls.forEach((file) => {
-            // Log the file before appending
-            console.log("File to append:", file);
             if (file && file.originFileObj) {
-              formData.append("images", file.originFileObj); // Append the original file object
-            } else {
-              console.warn("File originFileObj is undefined for:", file);
+              formData.append("images", file.originFileObj);
             }
           });
+
+          imageObj.stock.forEach((stockItem) => {
+            formData.append(
+              "stock",
+              JSON.stringify({
+                color: imageObj.color,
+                size: stockItem.size,
+                quantity: stockItem.quantity,
+              })
+            );
+          });
         } else {
-          console.warn("Image object is not structured correctly:", imageObj);
+          notification.error({
+            message: "Error",
+            description: `Please provide a valid price for color ${imageObj.color}.`,
+          });
+          return;
         }
       });
-    } else {
-      console.error("Product images are not defined or not an array");
     }
 
     axios
@@ -110,29 +125,33 @@ const ProductManagement = () => {
       })
       .then((response) => {
         setProducts([...products, response.data]);
-        setShowPopup(false); // Close modal after adding
+        setShowPopup(false);
         setNewProduct({
-          // Reset newProduct state
           name: "",
           category: "",
           brand: "",
-          size: [],
-          price: 0,
+          gender: 0,
           description: "",
-          stock: 0,
-          images: [],
+          images: [
+            {
+              imageUrls: [],
+              color: "",
+              price: 0,
+              stock: [{ size: "", quantity: 0 }],
+            },
+          ],
         });
         notification.success({
           message: "Success",
           description: "Product added successfully!",
-        }); // Display success notification
+        });
       })
       .catch((error) => {
         console.error("There was an error!", error);
         notification.error({
           message: "Error",
           description: "Failed to add product.",
-        }); // Display error notification
+        });
       });
   };
 
@@ -148,18 +167,30 @@ const ProductManagement = () => {
             name: "",
             category: "",
             brand: "",
-            size: [],
-            price: 0,
+            gender: 0,
             description: "",
-            stock: 0,
-            images: [],
+            images: [
+              {
+                imageUrls: [],
+                color: "",
+                price: 0,
+                stock: [{ size: "", quantity: 0 }],
+              },
+            ],
           });
-          setShowPopup(true); // Show modal
+          setShowPopup(true);
         }}
         icon={<PlusOutlined />}
         className="product-management-add-button"
       >
         Add Product
+      </Button>
+      <Button
+        type="primary"
+        className="product-management-add-button"
+        onClick={() => setShowDiscountModal(true)} // Mở Modal Khuyến Mãi
+      >
+        Khuyến Mãi
       </Button>
       <AddProductModal
         showPopup={showPopup}
@@ -168,9 +199,14 @@ const ProductManagement = () => {
         setNewProduct={setNewProduct}
         addProduct={addProduct}
       />
+      <DiscountModal
+        isVisible={showDiscountModal}
+        onClose={() => setShowDiscountModal(false)} // Đóng Modal Khuyến Mãi
+      />
       <Card>
         <ProductTable
           products={products}
+          setProducts={setProducts}
           categories={CATEGORIES}
           brands={BRANDS}
         />

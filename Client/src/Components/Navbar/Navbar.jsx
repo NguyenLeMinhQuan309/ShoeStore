@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Checkbox, Select, Divider, Row, Col } from "antd";
-import "./Navbar.css"; // You can style further if needed
+import { Checkbox, Select, Divider, Row, Col, Button, Tag } from "antd";
+import "./Navbar.css"; // Add custom styles if needed
 
 const { Option } = Select;
 
@@ -21,8 +21,9 @@ const Navbar = ({
     colors: [],
     sizes: [],
   });
+  // console.log(brands.length);
+  const [visibleFilter, setVisibleFilter] = useState(null);
 
-  // Handle checkbox change for brands, categories, colors, and sizes
   const handleCheckboxChange = (type, checkedValues) => {
     const uniqueCheckedValues = [...new Set(checkedValues)];
 
@@ -32,7 +33,6 @@ const Navbar = ({
         [type]: uniqueCheckedValues,
       };
 
-      // Call the corresponding handler based on the type of category being changed
       switch (type) {
         case "brands":
           onBrandChange(uniqueCheckedValues);
@@ -54,67 +54,72 @@ const Navbar = ({
     });
   };
 
-  // Handle sorting change
+  const handleRemoveFilter = (type, value) => {
+    setCheckedFilters((prevState) => {
+      const updatedFilters = prevState[type].filter((item) => item !== value);
+      handleCheckboxChange(type, updatedFilters);
+      return {
+        ...prevState,
+        [type]: updatedFilters,
+      };
+    });
+  };
+
   const handleSortChange = (value) => {
     onSortChange(value);
   };
 
+  const toggleFilter = (filter) => {
+    setVisibleFilter(visibleFilter === filter ? null : filter);
+  };
+
+  const renderCheckboxGroup = (options, type) => (
+    <div className="filter-content">
+      <Checkbox.Group
+        options={options}
+        value={checkedFilters[type]}
+        onChange={(checkedValues) => handleCheckboxChange(type, checkedValues)}
+        style={{ display: "flex", flexDirection: "column" }}
+        className="custom-checkbox-group"
+      />
+    </div>
+  );
+
+  const renderSelectedFilters = () => {
+    const titles = {
+      brands: "THƯƠNG HIỆU",
+      categories: "LOẠI SẢN PHẨM",
+      colors: "MÀU SẮC",
+      sizes: "KÍCH THƯỚC",
+    };
+
+    return Object.keys(checkedFilters).map((type) => {
+      if (checkedFilters[type].length === 0) return null; // Không hiển thị nếu không có giá trị
+      return (
+        <div key={type} style={{ marginBottom: "16px" }}>
+          <strong>{titles[type]}</strong>
+          <div>
+            {checkedFilters[type].map((value) => (
+              <Tag
+                closable
+                onClose={() => handleRemoveFilter(type, value)}
+                key={`${type}-${value}`}
+                style={{ marginBottom: "8px", fontSize: "15px" }}
+              >
+                {value}
+              </Tag>
+            ))}
+          </div>
+        </div>
+      );
+    });
+  };
+
   return (
     <div className="navbar" style={{ padding: "20px" }}>
-      <Divider orientation="left">Filter Products</Divider>
-
-      <Row gutter={[16, 16]}>
-        <Col span={24}>
-          <h4>Brands</h4>
-          <Checkbox.Group
-            options={brands.map((brand) => ({ label: brand, value: brand }))}
-            value={checkedFilters.brands}
-            onChange={(checkedValues) =>
-              handleCheckboxChange("brands", checkedValues)
-            }
-          />
-        </Col>
-
-        <Col span={24}>
-          <h4>Shoe Types</h4>
-          <Checkbox.Group
-            options={categories.map((category) => ({
-              label: category.name,
-              value: category.id,
-            }))}
-            value={checkedFilters.categories}
-            onChange={(checkedValues) =>
-              handleCheckboxChange("categories", checkedValues)
-            }
-          />
-        </Col>
-
-        <Col span={24}>
-          <h4>Colors</h4>
-          <Checkbox.Group
-            options={colors.map((color) => ({ label: color, value: color }))}
-            value={checkedFilters.colors}
-            onChange={(checkedValues) =>
-              handleCheckboxChange("colors", checkedValues)
-            }
-          />
-        </Col>
-
-        <Col span={24}>
-          <h4>Sizes</h4>
-          <Checkbox.Group
-            options={sizes.map((size) => ({ label: size, value: size }))}
-            value={checkedFilters.sizes}
-            onChange={(checkedValues) =>
-              handleCheckboxChange("sizes", checkedValues)
-            }
-          />
-        </Col>
-      </Row>
-
-      <Divider orientation="left">Sort Products</Divider>
+      <Divider orientation="center">Sort Products</Divider>
       <Select
-        style={{ width: 200 }}
+        style={{ width: 260 }}
         placeholder="Sort by"
         onChange={handleSortChange}
       >
@@ -123,6 +128,79 @@ const Navbar = ({
         <Option value="az">Name: A - Z</Option>
         <Option value="za">Name: Z - A</Option>
       </Select>
+
+      <Divider orientation="center">Selected Filters</Divider>
+      <div style={{ marginBottom: "16px" }}>{renderSelectedFilters()}</div>
+
+      <Divider orientation="center">Filter Products</Divider>
+      <Row gutter={[16, 16]}>
+        {brands.length > 1 ? (
+          <Col span={24}>
+            <Button
+              style={{ fontWeight: "bold", borderRadius: 20 }}
+              block
+              onClick={() => toggleFilter("brands")}
+            >
+              THƯƠNG HIỆU
+            </Button>
+            {visibleFilter === "brands" &&
+              renderCheckboxGroup(
+                brands.map((brand) => ({ label: brand, value: brand })),
+                "brands"
+              )}
+          </Col>
+        ) : (
+          ""
+        )}
+
+        <Col span={24}>
+          <Button
+            style={{ fontWeight: "bold", borderRadius: 20 }}
+            block
+            onClick={() => toggleFilter("categories")}
+          >
+            LOẠI SẢN PHẨM
+          </Button>
+          {visibleFilter === "categories" &&
+            renderCheckboxGroup(
+              categories.map((category) => ({
+                label: category.name,
+                value: category.id,
+              })),
+              "categories"
+            )}
+        </Col>
+
+        <Col span={24}>
+          <Button
+            style={{ fontWeight: "bold", borderRadius: 20 }}
+            block
+            onClick={() => toggleFilter("colors")}
+          >
+            MÀU SẮC
+          </Button>
+          {visibleFilter === "colors" &&
+            renderCheckboxGroup(
+              colors.map((color) => ({ label: color, value: color })),
+              "colors"
+            )}
+        </Col>
+
+        <Col span={24}>
+          <Button
+            style={{ fontWeight: "bold", borderRadius: 20 }}
+            block
+            onClick={() => toggleFilter("sizes")}
+          >
+            KÍCH THƯỚC
+          </Button>
+          {visibleFilter === "sizes" &&
+            renderCheckboxGroup(
+              sizes.map((size) => ({ label: size, value: size })),
+              "sizes"
+            )}
+        </Col>
+      </Row>
     </div>
   );
 };

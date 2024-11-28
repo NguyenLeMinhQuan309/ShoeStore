@@ -29,9 +29,15 @@ const upload = multer({
 // Define routes
 router.get("/getShoes", ShoesController.getAllShoes); // Lấy tất cả sản phẩm giày
 router.get("/filterproducts", ShoesController.filterProduct);
+router.post("/getQuantity", ShoesController.getQuantity);
 router.post("/addShoes", upload.array("images"), ShoesController.addShoe); // Thêm sản phẩm giày mới
 router.put("/update/:id", upload.array("images"), ShoesController.updateShoe); // Cập nhật sản phẩm giày theo ID
 router.get("/shoes/search", ShoesController.searchShoes);
+router.put("/updateStock", ShoesController.updateStock);
+router.put("/updateQuantity", ShoesController.updateQuantity);
+router.get("/recommendShoes/:email", ShoesController.getRecommendations);
+router.get("/recommendByItem/:id", ShoesController.getRecommendationsByItem);
+router.get("/totalproducts", ShoesController.totalProducts);
 // Serve uploaded files
 router.use(
   "/uploads/Shoes",

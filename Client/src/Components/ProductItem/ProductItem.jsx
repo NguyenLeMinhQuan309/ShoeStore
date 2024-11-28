@@ -16,7 +16,7 @@ const ProductItem = ({ products, colors }) => {
   };
 
   if (products.length === 0) {
-    return <div>No products found</div>; // Display a message if no products are available
+    return <div style={{ fontSize: 18 }}>No products found</div>; // Display a message if no products are available
   }
 
   return (
@@ -32,7 +32,7 @@ const ProductItem = ({ products, colors }) => {
           onClick={() => handlePageChange(currentPage - 1)}
           disabled={currentPage === 1}
         >
-          Previous
+          {"<"}
         </button>
         {Array.from({ length: totalPages }, (_, index) => (
           <button
@@ -47,7 +47,7 @@ const ProductItem = ({ products, colors }) => {
           onClick={() => handlePageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
         >
-          Next
+          {">"}
         </button>
       </div>
     </div>

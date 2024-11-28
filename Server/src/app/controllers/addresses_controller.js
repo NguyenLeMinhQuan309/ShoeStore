@@ -15,6 +15,8 @@ class AddressController {
   // Thêm một địa chỉ mới
   async createAddress(req, res) {
     const address = new Address(req.body);
+    console.log(req.body);
+
     try {
       const savedAddress = await address.save();
       res.status(201).json(savedAddress);
@@ -28,7 +30,7 @@ class AddressController {
     try {
       const updatedAddress = await Address.findOneAndUpdate(
         { email: req.params.email }, // Use findOneAndUpdate with email as filter
-        req.body.address, // Update the address fields
+        req.body, // Update the address fields
         { new: true } // Return the updated document
       );
       console.log(req.body);
@@ -37,11 +39,11 @@ class AddressController {
       if (!updatedAddress) {
         const address = new Address({
           email: req.params.email,
-          number: req.body.address.number,
-          street: req.body.address.street,
-          ward: req.body.address.ward,
-          district: req.body.address.district,
-          city: req.body.address.city,
+          number: req.body.number,
+          street: req.body.street,
+          ward: req.body.ward,
+          district: req.body.district,
+          city: req.body.city,
         }); // Use spread operator for req.body
         const savedAddress = await address.save();
         return res.status(201).json(savedAddress); // Use 201 Created for a new resource

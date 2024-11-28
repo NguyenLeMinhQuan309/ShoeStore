@@ -1,20 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import axios from "axios";
 import "./Css/main.css";
 import { useSearch } from "../Context/SearchContext"; // Adjust the path accordingly
 import Navbar from "../Components/Navbar/Navbar";
 import ProductItem from "../Components/ProductItem/ProductItem";
-
-const BRANDS = [
-  "Adidas",
-  "Hoka",
-  "Nike",
-  "Columbia",
-  "Skechers",
-  "On Running",
-  "Saucony",
-  "New Balance",
-];
 
 const COLORS = [
   "Xanh Dương",
@@ -27,20 +17,54 @@ const COLORS = [
   "Xanh Navy",
   "Tím",
   "Đa sắc",
+  "Cam",
 ];
-
-const SIZES = [36, 37, 38, 39, 40, 41, 42, 43, 44]; // Define available sizes
 
 const ProductComponent = () => {
   const { searchTerm } = useSearch(); // Get the search term from context
+  const [searchParams] = useSearchParams(); // Đọc query params từ URL
+  const gender = searchParams.get("gender"); // Lấy giá trị giới tính từ URL
+  const brand = searchParams.get("brand");
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({
     category: "",
-    brand: "",
+    brand: brand ? brand : "",
     color: "",
     size: "",
+    gender: gender === "male" ? 1 : gender === "female" ? 2 : "",
   });
+
+  const BRANDS = brand
+    ? [brand]
+    : [
+        "Adidas",
+        "Hoka",
+        "Nike",
+        "Columbia",
+        "Skechers",
+        "On Running",
+        "Saucony",
+        "New Balance",
+      ];
+  const SIZES =
+    gender === "male"
+      ? [39, 40, 41, 42, 43, 44]
+      : gender === "female"
+      ? [36, 37, 38, 39, 40]
+      : [36, 37, 38, 39, 40, 41, 42, 43, 44]; // Define available sizes
+
+  useEffect(() => {
+    setSelectedFilters((prev) => ({
+      ...prev,
+      gender: gender === "male" ? 1 : gender === "female" ? 2 : "", // Cập nhật filter giới tính
+    }));
+    console.log("gender:", selectedFilters);
+  }, [searchParams]);
+
+  useEffect(() => {
+    applyFilters();
+  }, [selectedFilters, searchTerm]);
 
   // Fetch categories from the backend
   useEffect(() => {
@@ -63,7 +87,7 @@ const ProductComponent = () => {
 
   // Fetch products based on filters and search term
   const applyFilters = async () => {
-    const { category, brand, color, size } = selectedFilters;
+    const { category, brand, color, size, gender } = selectedFilters;
     const query = [];
 
     if (category) {
@@ -78,6 +102,9 @@ const ProductComponent = () => {
     if (size) {
       query.push(`size=${size}`);
     }
+    if (gender) {
+      query.push(`gender=${gender}`);
+    }
 
     const queryString = query.length ? `?${query.join("&")}` : "";
 
@@ -87,6 +114,7 @@ const ProductComponent = () => {
           ? `http://localhost:3000/shoe/filterproducts${queryString}`
           : "http://localhost:3000/shoe/getShoes"
       );
+      console.log(response.data);
 
       // Filter products based on the search term
       const filteredProducts = response.data.filter((product) =>
@@ -139,9 +167,35 @@ const ProductComponent = () => {
   const handleSortChange = (sortType) => {
     let sortedProducts;
     if (sortType === "asc") {
-      sortedProducts = [...products].sort((a, b) => a.price - b.price);
+      sortedProducts = [...products].sort((a, b) => {
+        // Lấy giá cần so sánh
+        const priceA =
+          a.discountedColors?.length > 0
+            ? a.discountedColors[0].finalPrice
+            : a.images[0]?.price || 0;
+
+        const priceB =
+          b.discountedColors?.length > 0
+            ? b.discountedColors[0].finalPrice
+            : b.images[0]?.price || 0;
+
+        return priceA - priceB; // Sắp xếp tăng dần
+      });
     } else if (sortType === "desc") {
-      sortedProducts = [...products].sort((a, b) => b.price - a.price);
+      sortedProducts = [...products].sort((a, b) => {
+        // Lấy giá cần so sánh
+        const priceA =
+          a.discountedColors?.length > 0
+            ? a.discountedColors[0].finalPrice
+            : a.images[0]?.price || 0;
+
+        const priceB =
+          b.discountedColors?.length > 0
+            ? b.discountedColors[0].finalPrice
+            : b.images[0]?.price || 0;
+
+        return priceB - priceA; // Sắp xếp giảm dần
+      });
     } else if (sortType === "az") {
       sortedProducts = [...products].sort((a, b) =>
         a.name.localeCompare(b.name)

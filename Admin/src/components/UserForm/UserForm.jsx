@@ -2,7 +2,7 @@ import { Form, Input, Row, Col, Select } from "antd";
 
 const { Option } = Select;
 
-const UserForm = ({ newUser, setNewUser, isEditing }) => {
+const UserForm = ({ newUser, setNewUser, address, setAddress, isEditing }) => {
   return (
     <Form layout="vertical">
       <Row gutter={16}>
@@ -14,17 +14,32 @@ const UserForm = ({ newUser, setNewUser, isEditing }) => {
             />
           </Form.Item>
         </Col>
-        <Col span={12}>
-          <Form.Item label="Email" required>
-            <Input
-              type="email"
-              value={newUser.email}
-              onChange={(e) =>
-                setNewUser({ ...newUser, email: e.target.value })
-              }
-            />
-          </Form.Item>
-        </Col>
+        {!isEditing ? (
+          <Col span={12}>
+            <Form.Item label="Email" required>
+              <Input
+                type="email"
+                value={newUser.email}
+                onChange={(e) =>
+                  setNewUser({ ...newUser, email: e.target.value })
+                }
+              />
+            </Form.Item>
+          </Col>
+        ) : (
+          <Col span={12}>
+            <Form.Item label="Email" required>
+              <Input
+                type="email"
+                value={newUser.email}
+                disabled
+                onChange={(e) =>
+                  setNewUser({ ...newUser, email: e.target.value })
+                }
+              />
+            </Form.Item>
+          </Col>
+        )}
         {!isEditing ? (
           <Col span={12}>
             <Form.Item label="Password" required>
@@ -50,12 +65,48 @@ const UserForm = ({ newUser, setNewUser, isEditing }) => {
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item label="Address">
+          <Form.Item label="Number">
             <Input
-              value={newUser.address}
+              value={address.number}
               onChange={(e) =>
-                setNewUser({ ...newUser, address: e.target.value })
+                setAddress({ ...address, number: e.target.value })
               }
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item label="Street">
+            <Input
+              value={address.street}
+              onChange={(e) =>
+                setAddress({ ...address, street: e.target.value })
+              }
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item label="Ward">
+            <Input
+              value={address.ward}
+              onChange={(e) => setAddress({ ...address, ward: e.target.value })}
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item label="District">
+            <Input
+              value={address.district}
+              onChange={(e) =>
+                setAddress({ ...address, district: e.target.value })
+              }
+            />
+          </Form.Item>
+        </Col>
+        <Col span={12}>
+          <Form.Item label="City">
+            <Input
+              value={address.city}
+              onChange={(e) => setAddress({ ...address, city: e.target.value })}
             />
           </Form.Item>
         </Col>
@@ -71,14 +122,17 @@ const UserForm = ({ newUser, setNewUser, isEditing }) => {
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item label="Gender (0=Female, 1=Male)">
-            <Input
-              type="number"
+          <Form.Item label="Gender">
+            <Select
               value={newUser.gender}
-              onChange={(e) =>
-                setNewUser({ ...newUser, gender: e.target.value })
+              onChange={
+                (value) => setNewUser({ ...newUser, gender: value }) // Cập nhật giới tính
               }
-            />
+              placeholder="Select Gender"
+            >
+              <Select.Option value={1}>Male</Select.Option>
+              <Select.Option value={0}>Female</Select.Option>
+            </Select>
           </Form.Item>
         </Col>
       </Row>

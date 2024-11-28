@@ -1,0 +1,23 @@
+.suggestions {
+  margin-top: 20px;
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.suggestions h1 {
+  text-align: center;
+}
+
+.suggestions-list {
+  display: flex;
+  gap: 10px; /* Điều chỉnh khoảng cách nhỏ hơn giữa các items */
+  align-items: center;
+  justify-content: center; /* Căn giữa các items */
+  padding-bottom: 100px;
+}
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 200px;
+}

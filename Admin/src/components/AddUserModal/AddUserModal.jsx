@@ -7,6 +7,8 @@ const AddUserModal = ({
   newUser,
   setNewUser,
   addUser,
+  address,
+  setAddress,
   isEditing,
 }) => {
   return (
@@ -27,6 +29,8 @@ const AddUserModal = ({
       <UserForm
         newUser={newUser}
         setNewUser={setNewUser}
+        address={address}
+        setAddress={setAddress}
         isEditing={isEditing}
       />
     </Modal>

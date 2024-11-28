@@ -21,7 +21,7 @@ class BrandController {
   async getBrands(req, res) {
     try {
       const brands = await Brand.find({});
-      console.log("All Brand Fetched");
+      // console.log("All Brand Fetched");
       res.status(200).send(brands);
     } catch (error) {
       res.status(400).json({ message: "Error fetching brands", error });

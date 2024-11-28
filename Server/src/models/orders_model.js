@@ -9,12 +9,21 @@ const Order = new Schema({
   address: { type: String },
   total: { type: Number },
   date: { type: Date, default: Date.now }, // Ngày tạo đơn hàng, mặc định là thời gian hiện tại
+  shipdate: { type: Date },
   status: {
     type: String,
-    enum: ["Chờ duyệt", "Đang chuẩn bị hàng", "Đang giao", "Đã giao", "Đã hủy"], // Trạng thái cho phép
+    enum: [
+      "Chờ duyệt",
+      "Đã duyệt",
+      "Đang chuẩn bị hàng",
+      "Đang giao",
+      "Đã giao",
+      "Đã hủy",
+    ], // Trạng thái cho phép
     default: "Chờ duyệt", // Trạng thái mặc định
   },
   paid: { type: Boolean, default: false },
+  paymenttype: { type: String },
   product: [
     {
       id: { type: String },
@@ -23,6 +32,7 @@ const Order = new Schema({
       color: { type: String },
       size: { type: String },
       price: { type: Number },
+      finalPrice: { type: Number },
       quantity: { type: Number },
     },
   ],

@@ -6,7 +6,7 @@ import { CaretRightFilled, CaretLeftFilled } from "@ant-design/icons";
 
 const NewSection = () => {
   const [startIndex, setStartIndex] = useState(0); // Chỉ mục sản phẩm bắt đầu
-  const [productsPerPage, setProductsPerPage] = useState(7); // Số sản phẩm trên mỗi trang
+  const [productsPerPage, setProductsPerPage] = useState(4); // Số sản phẩm trên mỗi trang
   const [products, setProducts] = useState([]); // State to store products from API
 
   // Function to update the number of products per page based on screen width
@@ -40,12 +40,12 @@ const NewSection = () => {
   // Fetch products on component mount and handle screen resize
   useEffect(() => {
     fetchProducts(); // Fetch products from API
-    updateProductsPerPage(); // Initial check for products per page
-    window.addEventListener("resize", updateProductsPerPage); // Add resize event listener
+    // updateProductsPerPage(); // Initial check for products per page
+    // window.addEventListener("resize", updateProductsPerPage); // Add resize event listener
 
-    return () => {
-      window.removeEventListener("resize", updateProductsPerPage); // Cleanup event listener
-    };
+    // return () => {
+    //   window.removeEventListener("resize", updateProductsPerPage); // Cleanup event listener
+    // };
   }, []);
 
   // Get the current products to display based on pagination

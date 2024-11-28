@@ -16,6 +16,7 @@ const OrderManagement = () => {
     product: [],
     total: 0,
     status: "Chờ duyệt",
+    paymenttype: "Tiền mặt",
   });
   const [editingOrder, setEditingOrder] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
@@ -52,23 +53,6 @@ const OrderManagement = () => {
         console.log("Delete action canceled.");
       },
     });
-  };
-
-  const resetForm = () => {
-    setEditingOrder(null);
-    setNewOrder({
-      id: "",
-      email: "",
-      address: "",
-      product: [],
-      total: 0,
-      status: "Chờ duyệt",
-    });
-  };
-
-  const handleCloseModal = () => {
-    setShowPopup(false);
-    resetForm();
   };
 
   return (

@@ -7,29 +7,31 @@ import {
   Empty,
   Popover,
   Button,
+  Select,
 } from "antd";
-import OrderSummary from "../OrderSummary/OrderSummary"; // Import OrderSummary
+import OrderSummary from "../OrderSummary/OrderSummary";
 import "./MyOrder.css";
+
 const { Title } = Typography;
+const { Option } = Select;
 
 const MyOrder = ({ isVisible, handleClose, user }) => {
   const [orders, setOrders] = useState([]);
-  const [selectedOrderId, setSelectedOrderId] = useState(null); // Để lưu ID đơn hàng đã chọn
-  const [isOrderSummaryVisible, setIsOrderSummaryVisible] = useState(false); // Để hiển thị OrderSummary
+  const [filteredOrders, setFilteredOrders] = useState([]);
+  const [selectedOrderId, setSelectedOrderId] = useState(null);
+  const [isOrderSummaryVisible, setIsOrderSummaryVisible] = useState(false);
+  const [filterStatus, setFilterStatus] = useState("Tất cả"); // Trạng thái lọc ban đầu
 
   useEffect(() => {
     const fetchOrders = async () => {
       try {
         const response = await fetch(
-          `http://localhost:3000/order/getEmail/${user?.email}` // Kiểm tra user trước khi lấy email
+          `http://localhost:3000/order/getEmail/${user?.email}`
         );
         if (response.ok) {
           const data = await response.json();
-          // Lọc bỏ đơn hàng có trạng thái "Đã giao"
-          const filteredOrders = data.filter(
-            (order) => order.status !== "Đã giao"
-          );
-          setOrders(filteredOrders); // Lưu danh sách đơn hàng đã lọc
+          setOrders(data);
+          setFilteredOrders(data.filter((dat) => dat.status !== "Đã giao")); // Hiển thị tất cả đơn hàng ban đầu
         } else {
           notification.error({
             message: "Lỗi",
@@ -45,20 +47,28 @@ const MyOrder = ({ isVisible, handleClose, user }) => {
     };
 
     if (isVisible && user?.email) {
-      fetchOrders(); // Gọi API khi modal hiển thị và có email người dùng
+      fetchOrders();
     }
   }, [isVisible, user]);
 
   const handleOrderClick = (orderId) => {
-    setSelectedOrderId(orderId); // Lưu ID đơn hàng đã chọn
-    setIsOrderSummaryVisible(true); // Hiển thị OrderSummary
+    setSelectedOrderId(orderId);
+    setIsOrderSummaryVisible(true);
   };
 
   const handleOrderSummaryClose = () => {
-    setIsOrderSummaryVisible(false); // Đóng OrderSummary
+    setIsOrderSummaryVisible(false);
   };
 
-  // Cấu trúc của bảng
+  const handleFilterChange = (status) => {
+    setFilterStatus(status); // Cập nhật trạng thái lọc
+    if (status === "Tất cả") {
+      setFilteredOrders(orders.filter((order) => order.status !== "Đã giao")); // Hiển thị tất cả trừ đơn hàng "Đã giao"
+    } else {
+      setFilteredOrders(orders.filter((order) => order.status === status));
+    }
+  };
+
   const columns = [
     {
       title: "Tên sản phẩm",
@@ -69,7 +79,7 @@ const MyOrder = ({ isVisible, handleClose, user }) => {
           {products
             .map((product) => (
               <Popover
-                key={product.id}
+                key={`${product.id}-${product.size}-${product.color}`}
                 content={product.name}
                 title="Tên sản phẩm"
               >
@@ -80,14 +90,13 @@ const MyOrder = ({ isVisible, handleClose, user }) => {
                     overflow: "hidden",
                     display: "inline-block",
                     maxWidth: "300px",
-                  }} // Giới hạn chiều dài
+                  }}
                 >
                   {product.id}-{product.name}
                 </span>
               </Popover>
             ))
-            .reduce((prev, curr) => [prev, ", ", curr])}{" "}
-          {/* Thêm dấu phẩy giữa các sản phẩm */}
+            .reduce((prev, curr) => [prev, ", ", curr])}
         </span>
       ),
     },
@@ -96,6 +105,14 @@ const MyOrder = ({ isVisible, handleClose, user }) => {
       dataIndex: "status",
       key: "status",
       render: (status) => status || "Chờ duyệt",
+    },
+    {
+      title: "Trị giá",
+      dataIndex: "total",
+      key: "total",
+      render: (total) => {
+        return formatNumber(total) + ` VND`;
+      },
     },
     {
       title: "Ngày đặt hàng",
@@ -117,23 +134,42 @@ const MyOrder = ({ isVisible, handleClose, user }) => {
       },
     },
   ];
-
+  const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num);
   return (
     <>
-      {/* Modal hiển thị danh sách đơn hàng */}
-      <Modal visible={isVisible} onCancel={handleClose} footer={null}>
+      <Modal
+        width={800}
+        visible={isVisible}
+        onCancel={handleClose}
+        footer={null}
+      >
         <Title level={4}>Danh sách đơn hàng</Title>
-        {orders.length > 0 ? (
+
+        {/* ComboBox để lọc trạng thái */}
+        <Select
+          style={{ width: 200, marginBottom: "1rem" }}
+          value={filterStatus}
+          onChange={handleFilterChange}
+          placeholder="Chọn trạng thái đơn hàng"
+        >
+          <Option value="Tất cả">Tất cả</Option>
+          <Option value="Chờ duyệt">Chờ duyệt</Option>
+          <Option value="Đang chuẩn bị hàng">Đang chuẩn bị hàng</Option>
+          <Option value="Đang giao">Đang giao</Option>
+          <Option value="Đã hủy">Đã hủy</Option>
+        </Select>
+
+        {filteredOrders.length > 0 ? (
           <Table
-            dataSource={orders}
+            dataSource={filteredOrders}
             columns={columns}
             rowKey="id"
             pagination={false}
             rowClassName={(record, index) =>
               index % 2 === 0 ? "table-row-light" : "table-row-dark"
-            } // Alternate row colors
+            }
             onRow={(record) => ({
-              onClick: () => handleOrderClick(record.id), // Bấm vào hàng
+              onClick: () => handleOrderClick(record.id),
             })}
           />
         ) : (
@@ -148,7 +184,6 @@ const MyOrder = ({ isVisible, handleClose, user }) => {
         </Button>
       </Modal>
 
-      {/* Modal hiển thị chi tiết đơn hàng khi bấm vào */}
       <OrderSummary
         isVisible={isOrderSummaryVisible}
         handleClose={handleOrderSummaryClose}

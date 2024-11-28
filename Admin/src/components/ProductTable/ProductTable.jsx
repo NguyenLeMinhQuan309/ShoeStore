@@ -1,57 +1,55 @@
 import { Table, Button, Input, Select } from "antd";
 import { useState } from "react";
+import ProductDetailsModal from "../ProductDetailModal/ProductDetailModal";
 
-const ProductTable = ({ products, onEdit, onDelete, brands, categories }) => {
-  const [editingKey, setEditingKey] = useState(null); // Track the product being edited
-  const [stockValues, setStockValues] = useState({}); // Track stock values for editing
+const ProductTable = ({
+  products,
+  setProducts,
+  onDelete,
+  brands,
+  categories,
+}) => {
+  const [isModalVisible, setIsModalVisible] = useState(false); // Track modal visibility
+  const [modalProduct, setModalProduct] = useState(null); // Track product to display in modal
   const [selectedBrand, setSelectedBrand] = useState(null); // Track selected brand
   const [selectedCategories, setSelectedCategories] = useState(null); // Track selected categories
   const [searchKeyword, setSearchKeyword] = useState(""); // Track the search keyword
 
-  // Handle Edit button click
-  const handleEdit = (record) => {
-    setEditingKey(record._id); // Set the product being edited
-    setStockValues({ ...stockValues, [record._id]: record.stock }); // Initialize stock value
+  const showDetailsModal = (record) => {
+    setModalProduct(record);
+    setIsModalVisible(true);
   };
 
-  // Handle Save button click
-  const handleSave = (record) => {
-    onEdit({ ...record, stock: stockValues[record._id] }); // Save the new stock value
-    setEditingKey(null); // Exit editing mode
-  };
-
-  // Handle stock input change
-  const handleStockChange = (e, record) => {
-    setStockValues({ ...stockValues, [record._id]: e.target.value });
+  const handleCloseModal = () => {
+    setIsModalVisible(false);
+    setModalProduct(null);
   };
 
   const handleBrandChange = (value) => {
-    setSelectedBrand(value); // Set the selected brand for sorting
+    setSelectedBrand(value);
   };
 
   const handleCategoryChange = (value) => {
-    setSelectedCategories(value); // Set the selected categories for sorting
+    setSelectedCategories(value);
   };
 
-  // Handle search input change
   const handleSearchChange = (e) => {
-    setSearchKeyword(e.target.value.toLowerCase()); // Convert to lowercase for case-insensitive search
+    setSearchKeyword(e.target.value.toLowerCase());
   };
 
-  // Filter products based on brand, category, and search keyword
   const filteredProducts = products
     .filter((product) => !selectedBrand || product.brand === selectedBrand)
     .filter(
       (product) =>
         !selectedCategories || product.category === selectedCategories
     )
-    .filter((product) => product.name.toLowerCase().includes(searchKeyword)); // Filter based on search keyword
+    .filter((product) => product.name.toLowerCase().includes(searchKeyword));
 
   const columns = [
     {
       title: "ID",
       dataIndex: "id",
-      sorter: (a, b) => a.id.localeCompare(b.id), // Sort alphabetically
+      sorter: (a, b) => a.id.localeCompare(b.id),
     },
     {
       title: "Images",
@@ -61,10 +59,10 @@ const ProductTable = ({ products, onEdit, onDelete, brands, categories }) => {
           {images.map((img, index) => (
             <img
               key={index}
-              src={img.imageUrls[0]} // Display the first image for each color
+              src={img.imageUrls[0]}
               alt={`Product Image - ${img.color}`}
               className="product-management-image"
-              style={{ width: "50px", height: "50px", marginRight: "10px" }} // Adjust size as needed
+              style={{ width: "50px", height: "50px", marginRight: "10px" }}
             />
           ))}
         </div>
@@ -73,8 +71,22 @@ const ProductTable = ({ products, onEdit, onDelete, brands, categories }) => {
     {
       title: "Name",
       dataIndex: "name",
-      sorter: (a, b) => a.name.localeCompare(b.name), // Sort alphabetically
+      sorter: (a, b) => a.name.localeCompare(b.name),
     },
+    {
+      title: "Gender",
+      dataIndex: "gender",
+      render: (gender) => (gender === 1 ? "Nam" : "Nữ"), // Convert numeric value to text
+      filters: [
+        { text: "All", value: null }, // Default "All" option
+        { text: "Nam", value: 1 },
+        { text: "Nữ", value: 2 },
+      ],
+      onFilter: (value, record) => value === null || record.gender === value, // Filter logic
+      sorter: (a, b) => a.gender - b.gender, // Sorting logic
+      sortDirections: ["ascend", "descend"],
+    },
+
     {
       title: (
         <div>
@@ -116,63 +128,32 @@ const ProductTable = ({ products, onEdit, onDelete, brands, categories }) => {
       dataIndex: "category",
     },
     {
-      title: "Size",
-      dataIndex: "size",
-      render: (sizes) => sizes.join(", "), // Add a comma between each size
-    },
-    {
-      title: "Color",
+      title: "Color / Price",
       dataIndex: "images",
-      render: (images) => images.map((img) => img.color).join(" / "), // Display colors separated by '/'
+      render: (images) =>
+        images
+          .map((img) => `${img.color}: ${formatNumber(img.price)} vnd`)
+          .join(" / "),
     },
-    {
-      title: "Price",
-      dataIndex: "price",
-      sorter: (a, b) => a.price - b.price, // Sort numerically
-      render: (price) => `$${price.toFixed(2)}`, // Format as currency
-    },
-    {
-      title: "Stock",
-      dataIndex: "stock",
-      sorter: (a, b) => a.stock - b.stock, // Sort numerically
-      render: (stock, record) =>
-        editingKey === record._id ? (
-          <div>
-            <Input
-              value={stockValues[record._id]}
-              onChange={(e) => handleStockChange(e, record)}
-              style={{ width: "80px", marginRight: "10px" }}
-            />
-            <Button onClick={() => handleSave(record)}>Save</Button>
-          </div>
-        ) : (
-          <div>
-            <span>{stock}</span>
-            <Button
-              onClick={() => handleEdit(record)}
-              style={{ marginLeft: "10px" }}
-            >
-              Edit
-            </Button>
-          </div>
-        ),
-    },
+
     {
       title: "Actions",
       render: (text, record) => (
         <div>
           <Button
-            onClick={() => onDelete(record._id)} // Call onDelete with the product ID
+            onClick={() => showDetailsModal(record)}
             style={{ marginRight: "10px" }}
-            danger // To give it a red appearance
           >
+            Details
+          </Button>
+          <Button onClick={() => onDelete(record._id)} danger>
             Delete
           </Button>
         </div>
       ),
     },
   ];
-
+  const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num);
   return (
     <>
       <Input.Search
@@ -183,11 +164,17 @@ const ProductTable = ({ products, onEdit, onDelete, brands, categories }) => {
       <Table
         dataSource={filteredProducts}
         columns={columns}
-        rowKey="_id" // Ensure that _id is unique for each product
+        rowKey="_id"
         className="product-management-table"
         pagination={{ pageSize: 5 }}
         scroll={{ x: true }}
         tableLayout="fixed"
+      />
+      <ProductDetailsModal
+        visible={isModalVisible}
+        product={modalProduct}
+        setProduct={setProducts}
+        onClose={handleCloseModal}
       />
     </>
   );

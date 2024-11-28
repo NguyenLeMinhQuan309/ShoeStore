@@ -22,6 +22,7 @@ const AddProductModal = ({
       title="Add New Product"
       visible={showPopup}
       onCancel={() => setShowPopup(false)}
+      width={800}
       footer={[
         <Button key="cancel" onClick={() => setShowPopup(false)}>
           Cancel

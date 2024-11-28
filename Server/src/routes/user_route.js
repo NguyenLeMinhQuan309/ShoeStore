@@ -9,6 +9,8 @@ router.post("/login", UserController.login);
 router.get("/getall", UserController.getall);
 router.put("/update/:id", upload.single("image"), UserController.update);
 router.post("/upload", upload.single("image", UserController.uploadImage));
+router.get("/totalusers", UserController.totalUsers);
+router.put("/update-password/:id", UserController.updatePassword);
 router.use(
   "/uploads/userImage",
   express.static(path.join(__dirname, "../../uploads/userImage"))

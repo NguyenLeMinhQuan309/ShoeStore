@@ -1,0 +1,26 @@
+.comment-management-container {
+  padding: 20px;
+  background-color: white; /* White background */
+  border-radius: 8px; /* Rounded corners */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.comment-management-title {
+  margin-bottom: 20px;
+}
+
+.comment-management-add-button {
+  margin-bottom: 20px;
+}
+
+.comment-management-table {
+  margin-top: 20px;
+}
+
+.comment-management-modal {
+  width: 100%;
+}
+
+.comment-management-form-item {
+  margin-bottom: 16px;
+}
