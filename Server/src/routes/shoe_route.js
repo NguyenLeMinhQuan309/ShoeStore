@@ -38,6 +38,7 @@ router.put("/updateQuantity", ShoesController.updateQuantity);
 router.get("/recommendShoes/:email", ShoesController.getRecommendations);
 router.get("/recommendByItem/:id", ShoesController.getRecommendationsByItem);
 router.get("/totalproducts", ShoesController.totalProducts);
+router.delete("/delete/:id", ShoesController.deleteShoe);
 // Serve uploaded files
 router.use(
   "/uploads/Shoes",

@@ -8,6 +8,7 @@ const ProductTable = ({
   onDelete,
   brands,
   categories,
+  onEdit,
 }) => {
   const [isModalVisible, setIsModalVisible] = useState(false); // Track modal visibility
   const [modalProduct, setModalProduct] = useState(null); // Track product to display in modal
@@ -140,13 +141,19 @@ const ProductTable = ({
       title: "Actions",
       render: (text, record) => (
         <div>
+          {/* <Button
+            onClick={() => onEdit(record)}
+            style={{ marginRight: "10px" }}
+          >
+            Edit
+          </Button> */}
           <Button
             onClick={() => showDetailsModal(record)}
             style={{ marginRight: "10px" }}
           >
             Details
           </Button>
-          <Button onClick={() => onDelete(record._id)} danger>
+          <Button onClick={() => onDelete(record.id)} danger>
             Delete
           </Button>
         </div>
@@ -175,6 +182,7 @@ const ProductTable = ({
         product={modalProduct}
         setProduct={setProducts}
         onClose={handleCloseModal}
+        onEdit={onEdit}
       />
     </>
   );

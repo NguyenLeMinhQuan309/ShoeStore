@@ -7,14 +7,15 @@ import {
   InputNumber,
   Button,
   Upload,
+  notification,
 } from "antd";
-import { PlusOutlined } from "@ant-design/icons";
+import { PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 
 const { Option } = Select;
 
-const ProductForm = ({ newProduct, setNewProduct }) => {
+const ProductForm = ({ newProduct, setNewProduct, isEditMode, onSave }) => {
   const [imageInputs, setImageInputs] = useState(
     Array.isArray(newProduct.images) && newProduct.images.length > 0
       ? newProduct.images
@@ -31,7 +32,7 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
         );
         setCategories(response.data);
       } catch (error) {
-        console.error("There was an error fetching categories!", error);
+        console.error("Error fetching categories:", error);
       }
     };
 
@@ -40,7 +41,7 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
         const response = await axios.get("http://localhost:3000/brand/getAll");
         setBrands(response.data);
       } catch (error) {
-        console.error("There was an error fetching brands!", error);
+        console.error("Error fetching brands:", error);
       }
     };
 
@@ -115,14 +116,22 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
     }));
   };
 
+  const removeImageField = (index) => {
+    const updatedImages = [...imageInputs];
+    updatedImages.splice(index, 1);
+
+    setImageInputs(updatedImages);
+    setNewProduct((prevState) => ({
+      ...prevState,
+      images: updatedImages,
+    }));
+  };
+
   return (
     <Form layout="vertical">
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item
-            label="Gender"
-            rules={[{ required: true, message: "Please select a gender" }]}
-          >
+          <Form.Item label="Gender" required>
             <Select value={newProduct.gender} onChange={handleGenderChange}>
               <Option value={1}>Male</Option>
               <Option value={2}>Female</Option>
@@ -130,10 +139,7 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item
-            label="Product Name"
-            rules={[{ required: true, message: "Please enter product name" }]}
-          >
+          <Form.Item label="Product Name" required>
             <Input
               value={newProduct.name}
               onChange={(e) =>
@@ -145,15 +151,12 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item
-            label="Category"
-            rules={[{ required: true, message: "Please select a category" }]}
-          >
+          <Form.Item label="Category" required>
             <Select
               value={newProduct.category}
-              onChange={(value) => {
-                setNewProduct({ ...newProduct, category: value });
-              }}
+              onChange={(value) =>
+                setNewProduct({ ...newProduct, category: value })
+              }
             >
               {categories.map((category) => (
                 <Option key={category.id} value={category.id}>
@@ -164,15 +167,12 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item
-            label="Brand"
-            rules={[{ required: true, message: "Please select a brand" }]}
-          >
+          <Form.Item label="Brand" required>
             <Select
               value={newProduct.brand}
-              onChange={(value) => {
-                setNewProduct({ ...newProduct, brand: value });
-              }}
+              onChange={(value) =>
+                setNewProduct({ ...newProduct, brand: value })
+              }
             >
               {brands.map((brand) => (
                 <Option key={brand.id} value={brand.name}>
@@ -184,52 +184,60 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
         </Col>
       </Row>
 
+      {/* Image Inputs */}
       {imageInputs.map((input, index) => (
         <Row gutter={16} key={index}>
           <Col span={12}>
-            <Form.Item
-              label={`Upload Images for Color ${index + 1}`}
-              rules={[{ required: true }]}
-            >
-              <Upload
-                multiple
-                listType="picture-card"
-                fileList={input.imageUrls}
-                onChange={({ fileList }) => handleImageChange(index, fileList)}
-                beforeUpload={() => false}
-              >
-                {input.imageUrls.length >= 8 ? null : (
-                  <div>
-                    <PlusOutlined />
-                    <div style={{ marginTop: 8 }}>Upload</div>
-                  </div>
-                )}
-              </Upload>
-            </Form.Item>
+            {!isEditMode ? (
+              <Form.Item label={`Images for Color ${index + 1}`} required>
+                <Upload
+                  multiple
+                  listType="picture-card"
+                  fileList={input.imageUrls}
+                  onChange={({ fileList }) =>
+                    handleImageChange(index, fileList)
+                  }
+                  beforeUpload={() => false}
+                >
+                  {input.imageUrls.length >= 6 ? null : (
+                    <div>
+                      <PlusOutlined />
+                      <div style={{ marginTop: 8 }}>Upload</div>
+                    </div>
+                  )}
+                </Upload>
+              </Form.Item>
+            ) : (
+              <Form.Item label={`Images for Color ${index + 1}`}>
+                <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+                  <img
+                    src={input.imageUrls[0]}
+                    style={{
+                      width: "100px",
+                      height: "100px",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              </Form.Item>
+            )}
           </Col>
-          <Col span={12}>
-            <Form.Item
-              label={`Color for Images ${index + 1}`}
-              rules={[{ required: true }]}
-            >
-              <Input
-                value={input.color || ""}
-                onChange={(e) => handleColorChange(index, e.target.value)}
-                placeholder="Enter color"
-              />
-            </Form.Item>
-            <Form.Item
-              label={`Price for Color ${index + 1}`}
-              rules={[
-                {
-                  required: true,
-                  message: "Please enter price for this color",
-                },
-              ]}
-            >
+          <Col span={10}>
+            {!isEditMode ? (
+              <Form.Item label={`Color for Images ${index + 1}`} required>
+                <Input
+                  value={input.color}
+                  onChange={(e) => handleColorChange(index, e.target.value)}
+                  placeholder="Enter color"
+                />
+              </Form.Item>
+            ) : (
+              <span>Color: {input.color}</span>
+            )}
+            <Form.Item label={`Price for Color ${index + 1}`} required>
               <InputNumber
                 min={0}
-                value={input.price || 0}
+                value={input.price}
                 onChange={(value) => {
                   const updatedImages = [...imageInputs];
                   updatedImages[index].price = value;
@@ -243,18 +251,34 @@ const ProductForm = ({ newProduct, setNewProduct }) => {
               />
             </Form.Item>
           </Col>
+          <Col span={2}>
+            {!isEditMode ? (
+              <Button
+                type="danger"
+                icon={<DeleteOutlined />}
+                onClick={() => removeImageField(index)}
+                style={{ marginTop: "40px" }}
+              />
+            ) : (
+              ""
+            )}
+          </Col>
         </Row>
       ))}
 
       <Row gutter={16}>
         <Col span={24}>
-          <Button onClick={addImageField} type="dashed" block>
-            Add More Images
-          </Button>
+          {!isEditMode ? (
+            <Button onClick={addImageField} type="dashed" block>
+              Add More Images
+            </Button>
+          ) : (
+            ""
+          )}
         </Col>
       </Row>
 
-      <Row gutter={16} style={{ marginTop: "20px" }}>
+      <Row gutter={16} style={{ marginTop: 20 }}>
         <Col span={24}>
           <Form.Item label="Description">
             <Input.TextArea

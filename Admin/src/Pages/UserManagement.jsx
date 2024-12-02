@@ -15,7 +15,7 @@ const UserManagement = () => {
     email: "",
     phone: "",
     image: "", // Đổi avatar thành image
-    role: "customer",
+    role: "",
     password: "",
     gender: null,
   });

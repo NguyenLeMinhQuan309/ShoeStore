@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button, Card, Typography, notification } from "antd";
+import { Button, Card, Typography, notification, Modal } from "antd";
 import axios from "axios";
 import { PlusOutlined, UploadOutlined } from "@ant-design/icons";
 import ProductTable from "../components/ProductTable/ProductTable";
@@ -35,6 +35,7 @@ const BRANDS = [
 const ProductManagement = () => {
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({
+    id: "",
     name: "",
     category: "",
     brand: "",
@@ -53,7 +54,7 @@ const ProductManagement = () => {
 
   const [showPopup, setShowPopup] = useState(false);
   const [showDiscountModal, setShowDiscountModal] = useState(false); // State để hiển thị Discount Modal
-
+  const [editingProduct, setEditingProduct] = useState(null);
   // Fetch products
   useEffect(() => {
     axios
@@ -61,6 +62,7 @@ const ProductManagement = () => {
       .then((response) => setProducts(response.data))
       .catch((error) => console.error("There was an error!", error));
   }, []);
+
   const addProduct = (product) => {
     if (
       !product.name ||
@@ -118,43 +120,116 @@ const ProductManagement = () => {
         }
       });
     }
+    if (editingProduct) {
+      axios
+        .put(`http://localhost:3000/shoe/update/${product.id}`, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        .then((response) => {
+          const updatedProduct = response.data;
 
-    axios
-      .post("http://localhost:3000/shoe/addShoes", formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      })
-      .then((response) => {
-        setProducts([...products, response.data]);
-        setShowPopup(false);
-        setNewProduct({
-          name: "",
-          category: "",
-          brand: "",
-          gender: 0,
-          description: "",
-          images: [
-            {
-              imageUrls: [],
-              color: "",
-              price: 0,
-              stock: [{ size: "", quantity: 0 }],
-            },
-          ],
+          // Cập nhật danh sách sản phẩm
+          setProducts((prevProducts) =>
+            prevProducts.map((p) =>
+              p.id === updatedProduct.id ? updatedProduct : p
+            )
+          );
+          setShowPopup(false); // Đóng popup
+          // Hiển thị thông báo thành công
+          notification.success({
+            message: "Success",
+            description: "Product updated successfully!",
+          });
+        })
+        .catch((error) => {
+          notification.error({
+            message: "Error",
+            description: "Failed to update the product. Please try again.",
+          });
+          console.error(error);
         });
-        notification.success({
-          message: "Success",
-          description: "Product added successfully!",
+    } else {
+      axios
+        .post("http://localhost:3000/shoe/addShoes", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        })
+        .then((response) => {
+          setProducts([...products, response.data]);
+          setShowPopup(false);
+          setNewProduct({
+            name: "",
+            category: "",
+            brand: "",
+            gender: 0,
+            description: "",
+            images: [
+              {
+                imageUrls: [],
+                color: "",
+                price: 0,
+                stock: [{ size: "", quantity: 0 }],
+              },
+            ],
+          });
+          notification.success({
+            message: "Success",
+            description: "Product added successfully!",
+          });
+        })
+        .catch((error) => {
+          console.error("There was an error!", error);
+          notification.error({
+            message: "Error",
+            description: "Failed to add product.",
+          });
         });
-      })
-      .catch((error) => {
-        console.error("There was an error!", error);
-        notification.error({
-          message: "Error",
-          description: "Failed to add product.",
-        });
-      });
+    }
   };
-
+  const handleEdit = (product) => {
+    setEditingProduct(true);
+    setNewProduct({
+      id: product.id,
+      name: product.name,
+      category: product.category,
+      brand: product.brand,
+      gender: product.gender,
+      description: product.description,
+      images: product.images,
+    });
+    setShowPopup(true);
+  };
+  const deleteShoe = async (shoeId) => {
+    Modal.confirm({
+      title: "Are you sure you want to delete this product?",
+      onOk: async () => {
+        try {
+          const response = await axios.delete(
+            `http://localhost:3000/shoe/delete/${shoeId}`
+          );
+          setProducts((prevProducts) =>
+            prevProducts.filter((product) => product.id !== shoeId)
+          );
+          console.log(response.data.message);
+          notification.success({
+            message: "Success",
+            description: "Product deleted successfully!",
+          });
+        } catch (error) {
+          console.error(
+            "Error deleting shoe:",
+            error.response?.data?.message || error.message
+          );
+          notification.error({
+            message: "Error",
+            description: "Failed to delete the product. Please try again.",
+          });
+        }
+      },
+      onCancel() {
+        console.log("Delete action canceled.");
+      },
+    });
+  };
   return (
     <div className="product-management-container">
       <Title level={2} className="product-management-title">
@@ -163,6 +238,7 @@ const ProductManagement = () => {
       <Button
         type="primary"
         onClick={() => {
+          setEditingProduct(null);
           setNewProduct({
             name: "",
             category: "",
@@ -198,6 +274,7 @@ const ProductManagement = () => {
         newProduct={newProduct}
         setNewProduct={setNewProduct}
         addProduct={addProduct}
+        isEditing={editingProduct !== null}
       />
       <DiscountModal
         isVisible={showDiscountModal}
@@ -209,6 +286,8 @@ const ProductManagement = () => {
           setProducts={setProducts}
           categories={CATEGORIES}
           brands={BRANDS}
+          onEdit={handleEdit}
+          onDelete={deleteShoe}
         />
       </Card>
     </div>

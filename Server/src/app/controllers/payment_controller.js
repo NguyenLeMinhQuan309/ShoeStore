@@ -13,7 +13,7 @@ const moment = require("moment"); // npm install moment
 class PaymentController {
   async payment(req, res) {
     const embed_data = {
-      // redirecturl: "https://pcrender.com",
+      redirecturl: "http://localhost:5173",
     };
 
     const items = [{}];
@@ -26,7 +26,7 @@ class PaymentController {
       app_time: Date.now(), // miliseconds
       item: JSON.stringify(items),
       embed_data: JSON.stringify(embed_data),
-      amount: req.body.amount,
+      amount: Math.round(req.body.amount / 1000 / 1000) * 1000,
       description: `Thanh toan cho don hang #${req.body.order_id}`,
       bank_code: "zalopayapp",
       callback_url:

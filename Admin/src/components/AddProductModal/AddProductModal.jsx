@@ -8,6 +8,7 @@ const AddProductModal = ({
   newProduct,
   setNewProduct,
   addProduct,
+  isEditing,
 }) => {
   const [loading, setLoading] = useState(false); // Manage loading state
 
@@ -19,7 +20,7 @@ const AddProductModal = ({
 
   return (
     <Modal
-      title="Add New Product"
+      title={isEditing ? "Edit Product" : "Add New Product"}
       visible={showPopup}
       onCancel={() => setShowPopup(false)}
       width={800}
@@ -33,12 +34,16 @@ const AddProductModal = ({
           loading={loading} // Show loading state
           onClick={handleAddProduct} // Call the handleAddProduct function
         >
-          Add Product
+          {isEditing ? "Update Product" : "Add Product"}
         </Button>,
       ]}
       className="product-management-modal"
     >
-      <ProductForm newProduct={newProduct} setNewProduct={setNewProduct} />
+      <ProductForm
+        newProduct={newProduct}
+        setNewProduct={setNewProduct}
+        isEditMode={isEditing}
+      />
     </Modal>
   );
 };

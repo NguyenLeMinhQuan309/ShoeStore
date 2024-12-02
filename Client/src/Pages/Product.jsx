@@ -25,10 +25,11 @@ const ProductComponent = () => {
   const [searchParams] = useSearchParams(); // Đọc query params từ URL
   const gender = searchParams.get("gender"); // Lấy giá trị giới tính từ URL
   const brand = searchParams.get("brand");
+  const category = searchParams.get("category");
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedFilters, setSelectedFilters] = useState({
-    category: "",
+    category: category ? category : "",
     brand: brand ? brand : "",
     color: "",
     size: "",

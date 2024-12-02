@@ -2,7 +2,13 @@ import { Modal, Button, Table, Input, message } from "antd";
 import { useState } from "react";
 import axios from "axios";
 
-const ProductDetailsModal = ({ visible, product, onClose, setProduct }) => {
+const ProductDetailsModal = ({
+  visible,
+  product,
+  onClose,
+  setProduct,
+  onEdit,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editedQuantities, setEditedQuantities] = useState({});
 
@@ -122,6 +128,11 @@ const ProductDetailsModal = ({ visible, product, onClose, setProduct }) => {
       onCancel={onClose}
       width={800}
       footer={[
+        !isEditing && (
+          <Button key="edit1" onClick={() => onEdit(product)}>
+            Edit Product
+          </Button>
+        ),
         <Button key="edit" onClick={handleEditToggle}>
           {isEditing ? "Cancel" : "Edit Stock"}
         </Button>,

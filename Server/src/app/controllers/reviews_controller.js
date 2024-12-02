@@ -53,11 +53,11 @@ class ReviewsController {
         "userId",
         "name image"
       );
-      if (!reviews.length) {
-        return res
-          .status(404)
-          .json({ message: "No reviews found for this product." });
-      }
+      // if (!reviews.length) {
+      //   return res
+      //     .status(404)
+      //     .json({ message: "No reviews found for this product." });
+      // }
       console.log(reviews);
 
       res.status(200).json(reviews);

@@ -21,6 +21,12 @@ const OrderSummary = ({ isVisible, handleClose, orderId }) => {
   const [paid, setPaid] = useState(false);
 
   useEffect(() => {
+    if (isVisible) {
+      fetchOrderDetails();
+    }
+  }, [isVisible, orderId]);
+
+  useEffect(() => {
     const changePaid = async () => {
       if (paid) {
         try {
@@ -29,7 +35,11 @@ const OrderSummary = ({ isVisible, handleClose, orderId }) => {
             { method: "PUT" }
           );
           if (response.ok) {
+            const data = await response.json();
             setPaid(false);
+            console.log("order: " + data.order);
+
+            setOrderDetails(data.order);
           } else {
             console.error("Error changing paid status:", response.statusText);
           }
@@ -40,7 +50,6 @@ const OrderSummary = ({ isVisible, handleClose, orderId }) => {
     };
 
     if (isVisible) {
-      fetchOrderDetails();
       changePaid();
     }
   }, [isVisible, orderId, paid]);

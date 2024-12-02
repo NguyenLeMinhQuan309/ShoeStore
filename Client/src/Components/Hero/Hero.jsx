@@ -9,7 +9,7 @@ const Hero = () => {
   const navigate = useNavigate();
 
   const handleButtonClick = () => {
-    navigate("/target-page");
+    navigate("/product?brand=Adidas&category=giaydabong");
   };
   return (
     <div className="hero">

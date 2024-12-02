@@ -98,7 +98,7 @@ class UserController {
       );
 
       // Kiểm tra nếu địa chỉ email có chứa "@admin"
-      if (user.email.includes("@admin")) {
+      if (user.role === "admin") {
         // Chuyển hướng đến trang admin
         res.status(200).json({
           message: "Đăng nhập thành công - Chuyển hướng đến trang admin",
@@ -124,7 +124,7 @@ class UserController {
   }
   async update(req, res) {
     const userId = req.params.id;
-    const { name, email, phone, gender, password } = req.body;
+    const { name, email, phone, gender, password, role } = req.body;
 
     try {
       if (!userId) {
@@ -172,7 +172,7 @@ class UserController {
       user.email = email !== undefined ? email : user.email;
       user.phone = phone !== undefined ? phone : user.phone;
       user.gender = gender !== undefined ? gender : user.gender;
-
+      user.role = role !== undefined ? role : user.role;
       // Nếu có mật khẩu mới, mã hóa nó và cập nhật
       if (password) {
         user.password = await bcrypt.hash(password, 10);

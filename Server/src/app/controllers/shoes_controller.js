@@ -247,64 +247,66 @@ class ShoesController {
   async updateShoe(req, res) {
     try {
       const {
-        id, // The shoe ID to update
         name,
-        price,
         category,
         brand,
         gender,
         description,
-        color, // Updated color(s)
-        stock, // Updated stock array
+        color, // Mảng các màu sắc
+        stock, // Mảng chứa { color, size, quantity }
+        price, // Mảng giá theo màu
       } = req.body;
 
-      // Ensure `color` is an array
-      const colors = Array.isArray(color) ? color : [color];
-
-      // Ensure `stock` is an array; default to an empty array if not provided
-      const stockArray = Array.isArray(stock) ? stock : [stock];
-
-      // Fetch the shoe to update
-      const shoe = await Shoe.findOne({ id });
+      // Tìm sản phẩm theo ID
+      const shoe = await Shoe.findOne({ id: req.params.id });
       if (!shoe) {
         return res.status(404).json({ message: "Shoe not found" });
       }
 
-      // Update basic information
-      if (name) shoe.name = name;
-      if (price) shoe.price = price;
-      if (category) shoe.category = category;
-      if (brand) shoe.brand = brand;
-      if (gender) shoe.gender = gender;
-      if (description) shoe.description = description;
+      // Đảm bảo `color` và `price` là mảng, nếu không chuyển đổi thành mảng
+      const colors = Array.isArray(color) ? color : [color];
+      const prices = Array.isArray(price) ? price : [price];
 
-      // Update images and stock for each color
-      const images = [];
+      if (colors.length !== prices.length) {
+        return res.status(400).json({
+          message: "The number of colors and prices must match.",
+        });
+      }
+
+      // Chuyển `stock` từ JSON string sang object
+      const stockArray = Array.isArray(stock)
+        ? stock.map(JSON.parse)
+        : [JSON.parse(stock)];
+
+      // Cập nhật danh sách ảnh nếu có upload mới
       if (req.files && req.files.length > 0) {
         const tempDir = path.join(__dirname, `../../../uploads/Shoes/temp`);
 
-        // Validate number of images for each color
+        // Kiểm tra số lượng ảnh
         if (req.files.length < colors.length * 6) {
           return res.status(400).json({
             message:
               "Insufficient images for colors. Each color requires 6 images.",
           });
         }
-        // Loop through colors to handle images and stock data
+
+        const images = [];
         colors.forEach((c, index) => {
-          // Find sizes and quantities for this color from the stock array
+          // Lọc stock tương ứng với màu hiện tại
           const colorStock = stockArray
-            .map((s) => JSON.parse(s)) // Parse each string into an object
             .filter((s) => s.color === c)
             .map((s) => ({ size: s.size, quantity: s.quantity }));
 
-          // Prepare image URLs for this color
+          // Lấy giá trị price tương ứng với màu
+          const colorPrice = prices[index];
+
+          // Tạo danh sách URL ảnh cho màu hiện tại
           const colorImageUrls = req.files
             .slice(index * 6, (index + 1) * 6)
             .map((file) => {
               const finalDir = path.join(
                 __dirname,
-                `../../../uploads/Shoes/${shoe.id}/${c}`
+                `../../../uploads/Shoes/${id}/${c}`
               );
               if (!fs.existsSync(finalDir))
                 fs.mkdirSync(finalDir, { recursive: true });
@@ -312,24 +314,49 @@ class ShoesController {
               const finalFilePath = path.join(finalDir, file.filename);
               fs.renameSync(path.join(tempDir, file.filename), finalFilePath);
 
-              return `${req.protocol}://${req.get("host")}/shoe/uploads/Shoes/${
-                shoe.id
-              }/${c}/${file.filename}`;
+              return `${req.protocol}://${req.get(
+                "host"
+              )}/shoe/uploads/Shoes/${id}/${c}/${file.filename}`;
             });
 
+          // Đưa dữ liệu vào danh sách `images`
           images.push({
             imageUrls: colorImageUrls,
             color: c,
+            price: colorPrice, // Thêm giá cho từng màu
             stock: colorStock,
           });
         });
 
-        // Replace the existing images
+        // Cập nhật `images` trong sản phẩm
         shoe.images = images;
+      } else {
+        // Nếu không có file, chỉ cập nhật giá
+        shoe.images.forEach((image, index) => {
+          // Lấy giá trị price mới từ danh sách `prices`
+          const newPrice = prices[index];
+
+          // Cập nhật giá trị trong ảnh hiện có
+          if (newPrice !== undefined) {
+            image.price = newPrice;
+          }
+        });
+
+        // Kiểm tra và xóa bỏ hình ảnh của màu không có trong danh sách `colors`
+        shoe.images = shoe.images.filter((image) =>
+          colors.includes(image.color)
+        );
       }
 
-      // Save the updated shoe
+      // Cập nhật các trường khác
+      shoe.name = name || shoe.name;
+      shoe.category = category || shoe.category;
+      shoe.brand = brand || shoe.brand;
+      shoe.gender = gender || shoe.gender;
+      shoe.description = description || shoe.description;
+
       await shoe.save();
+
       res.status(200).json(shoe);
     } catch (err) {
       console.error(err);
@@ -668,6 +695,38 @@ class ShoesController {
     } catch (error) {
       console.error("Error updating quantity:", error);
       res.status(500).json({ message: "Internal server error" });
+    }
+  }
+  async deleteShoe(req, res) {
+    try {
+      const { id } = req.params;
+
+      // Tìm sản phẩm trong cơ sở dữ liệu
+      const shoe = await Shoe.findOne({ id });
+      if (!shoe) {
+        return res.status(404).json({ message: "Shoe not found" });
+      }
+
+      // Xóa khuyến mãi liên quan đến sản phẩm
+      await Discount.deleteMany({ productId: id });
+
+      // Xóa các tệp hình ảnh liên quan
+      const productDir = path.join(__dirname, `../../../uploads/Shoes/${id}`);
+      if (fs.existsSync(productDir)) {
+        fs.rmSync(productDir, { recursive: true, force: true });
+      }
+
+      // Xóa sản phẩm khỏi cơ sở dữ liệu
+      await Shoe.deleteOne({ id });
+
+      res
+        .status(200)
+        .json({ message: "Shoe and related discounts deleted successfully" });
+    } catch (err) {
+      console.error(err);
+      res
+        .status(500)
+        .json({ message: "Error deleting shoe", error: err.message });
     }
   }
 }
