@@ -299,11 +299,14 @@ const Dashboard = () => {
             {timeFrame === "year" && (
               <h3>
                 Total Revenue for {selectedYear}:{" "}
-                {revenueData.reduce(
-                  (total, item) => formatNumber(total + item.revenue),
-                  0
-                ) || "No revenue"}{" "}
-                VND
+                {revenueData.length > 0
+                  ? `${formatNumber(
+                      revenueData.reduce(
+                        (total, item) => total + item.revenue,
+                        0
+                      )
+                    )} VND`
+                  : "No revenue"}
               </h3>
             )}
 

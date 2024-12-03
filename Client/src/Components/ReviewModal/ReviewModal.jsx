@@ -78,7 +78,7 @@ const ReviewsModal = ({ isModalVisible, handleCancel, reviews }) => {
                   {/* Display Rating */}
                   <Rate
                     disabled
-                    defaultValue={item.rating}
+                    value={item.rating}
                     style={{ marginRight: "10px" }}
                   />
                 </div>
@@ -94,7 +94,11 @@ const ReviewsModal = ({ isModalVisible, handleCancel, reviews }) => {
                     }}
                   >
                     <img
-                      src={item.userId.image}
+                      src={
+                        item.userId.image
+                          ? item.userId.image
+                          : "http://localhost:3000/user/uploads/userImage/default_avatar.png"
+                      }
                       alt={item.userId.name}
                       style={{
                         width: 40,

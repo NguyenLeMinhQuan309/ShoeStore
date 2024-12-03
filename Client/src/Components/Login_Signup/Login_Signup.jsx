@@ -209,7 +209,10 @@ const Login_Signup = () => {
             trigger="hover"
           >
             <img
-              src={user?.image || "src/assets/default_avatar.png"}
+              src={
+                user?.image ||
+                "http://localhost:3000/user/uploads/userImage/default_avatar.png"
+              }
               className="user-avatar"
               alt="user avatar"
             />

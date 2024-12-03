@@ -111,12 +111,11 @@ class StatisticController {
             image: { $first: "$product.image" },
             totalQuantitySold: { $sum: "$product.quantity" }, // Sum the quantity for each product ID
             totalRevenue: {
-              $sum: { $multiply: ["$product.quantity", "$product.price"] },
+              $sum: { $multiply: ["$product.quantity", "$product.finalprice"] },
             }, // Calculate total revenue
           },
         },
         { $sort: { totalQuantitySold: -1 } }, // Sort by total quantity sold in descending order
-        { $limit: 5 }, // Limit the result to top 5 products
       ]);
 
       res.json(topSellingProducts);

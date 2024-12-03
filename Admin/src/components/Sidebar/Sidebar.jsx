@@ -31,7 +31,7 @@ const Sidebar = ({ collapsed }) => {
       icon: <UserOutlined style={{ color: "#000" }} />,
       label: (
         <Link to="/user" style={{ color: "#000" }}>
-          Quản lý khách hàng
+          Quản lý tài khoản
         </Link>
       ),
     },

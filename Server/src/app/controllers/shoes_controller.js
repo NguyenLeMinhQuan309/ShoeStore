@@ -527,9 +527,8 @@ class ShoesController {
     }
   }
   async getRecommendations(req, res) {
-    const { email } = req.params; // Nhận email từ query parameter
+    const { email } = req.params;
 
-    // Gọi script Python và truyền email làm tham số
     const pythonProcess = spawn("python3", [
       "../Recommend/recommend.py",
       email,
@@ -539,7 +538,6 @@ class ShoesController {
 
     pythonProcess.stdout.on("data", (chunk) => {
       data += chunk.toString();
-      console.log("Data received from Python script:", data); // Thêm log này để kiểm tra
     });
 
     pythonProcess.stderr.on("data", (chunk) => {
@@ -549,18 +547,56 @@ class ShoesController {
     pythonProcess.on("close", async (code) => {
       if (code === 0) {
         try {
-          // Loại bỏ dấu nháy đơn và thay bằng dấu nháy kép để tạo chuỗi JSON hợp lệ
-          let cleanedData = data.trim().replace(/'/g, '"');
+          const today = new Date();
 
-          // Phân tích chuỗi thành mảng JSON
+          let cleanedData = data.trim().replace(/'/g, '"');
           const recommendedProductIDs = JSON.parse(cleanedData);
 
-          // Truy vấn MongoDB để lấy chi tiết các sản phẩm
           const recommendedProducts = await Shoe.find({
             id: { $in: recommendedProductIDs },
           });
 
-          res.status(200).json({ recommendedProducts });
+          const shoesWithDiscounts = await Promise.all(
+            recommendedProducts.map(async (product) => {
+              const discountedColors = await Promise.all(
+                product.images.map(async (image) => {
+                  const color = image.color;
+                  const price = image.price;
+
+                  const discount = await Discount.findOne({
+                    productId: product.id,
+                    color,
+                    active: true,
+                    startDate: { $lte: today },
+                    endDate: { $gte: today },
+                  });
+
+                  if (discount) {
+                    const finalPrice =
+                      price - (price * discount.discountPercentage) / 100;
+                    return {
+                      color,
+                      originalPrice: price,
+                      finalPrice,
+                      discountPercentage: discount.discountPercentage,
+                      startDate: discount.startDate,
+                      endDate: discount.endDate,
+                    };
+                  }
+                  return null;
+                })
+              );
+
+              return {
+                ...product.toObject(),
+                discountedColors: discountedColors.filter(
+                  (item) => item !== null
+                ),
+              };
+            })
+          );
+
+          res.status(200).json(shoesWithDiscounts);
         } catch (error) {
           console.error("Error fetching product details:", error);
           res
@@ -572,10 +608,10 @@ class ShoesController {
       }
     });
   }
-  async getRecommendationsByItem(req, res) {
-    const { id } = req.params; // Receive id from query parameter
 
-    // Call Python script and pass id as argument
+  async getRecommendationsByItem(req, res) {
+    const { id } = req.params;
+
     const pythonProcess = spawn("python3", [
       "../Recommend/itemrecommend.py",
       id,
@@ -594,21 +630,56 @@ class ShoesController {
     pythonProcess.on("close", async (code) => {
       if (code === 0) {
         try {
-          // Log the complete data from Python after closing to ensure full data capture
-          console.log("Data received from Python script:", data.trim());
+          const today = new Date();
 
-          // Clean single quotes and prepare JSON-compatible string
           let cleanedData = data.trim().replace(/'/g, '"');
-
-          // Parse string to JSON array
           const recommendedProductIDs = JSON.parse(cleanedData);
 
-          // Fetch product details from MongoDB
           const recommendedProducts = await Shoe.find({
             id: { $in: recommendedProductIDs },
           });
 
-          res.status(200).json({ recommendedProducts });
+          const shoesWithDiscounts = await Promise.all(
+            recommendedProducts.map(async (product) => {
+              const discountedColors = await Promise.all(
+                product.images.map(async (image) => {
+                  const color = image.color;
+                  const price = image.price;
+
+                  const discount = await Discount.findOne({
+                    productId: product.id,
+                    color,
+                    active: true,
+                    startDate: { $lte: today },
+                    endDate: { $gte: today },
+                  });
+
+                  if (discount) {
+                    const finalPrice =
+                      price - (price * discount.discountPercentage) / 100;
+                    return {
+                      color,
+                      originalPrice: price,
+                      finalPrice,
+                      discountPercentage: discount.discountPercentage,
+                      startDate: discount.startDate,
+                      endDate: discount.endDate,
+                    };
+                  }
+                  return null;
+                })
+              );
+
+              return {
+                ...product.toObject(),
+                discountedColors: discountedColors.filter(
+                  (item) => item !== null
+                ),
+              };
+            })
+          );
+
+          res.status(200).json(shoesWithDiscounts);
         } catch (error) {
           console.error("Error fetching product details:", error);
           res
@@ -620,6 +691,7 @@ class ShoesController {
       }
     });
   }
+
   async totalProducts(req, res) {
     try {
       // Đếm tổng số tài liệu (sản phẩm) trong collection

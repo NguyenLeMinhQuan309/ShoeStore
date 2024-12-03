@@ -189,7 +189,11 @@ const RatingComponent = ({ reviews, onRatingSubmit }) => {
                   }}
                 >
                   <img
-                    src={review.userId.image} // Assuming userId.image holds the avatar URL
+                    src={
+                      review.userId.image
+                        ? review.userId.image
+                        : "http://localhost:3000/user/uploads/userImage/default_avatar.png"
+                    } // Assuming userId.image holds the avatar URL
                     alt={review.userId.name}
                     style={{
                       width: 40,

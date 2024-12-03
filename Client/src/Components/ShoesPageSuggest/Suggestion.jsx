@@ -14,7 +14,7 @@ const Suggestions = ({ id }) => {
         const response = await axios.get(
           `http://localhost:3000/shoe/recommendByItem/${id}`
         ); // Replace with actual endpoint
-        setSuggestions(response.data.recommendedProducts);
+        setSuggestions(response.data);
       } catch (error) {
         console.error("Error fetching suggestions:", error);
       } finally {

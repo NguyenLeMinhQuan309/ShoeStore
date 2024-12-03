@@ -266,7 +266,8 @@ const UserInfoModal = ({
                 src={
                   formValues.image && formValues.image instanceof File
                     ? URL.createObjectURL(formValues.image)
-                    : formValues.image || "src/assets/default_avatar.png"
+                    : formValues.image ||
+                      "http://localhost:3000/user/uploads/userImage/default_avatar.png"
                 }
                 alt="Avatar"
                 style={{
