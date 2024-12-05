@@ -40,8 +40,8 @@ const Login_Signup = () => {
   const handleLogout = () => {
     localStorage.removeItem("user");
     setUser(null);
-    window.location.reload();
-    // navigate("/");
+    // window.location.reload();
+    navigate("/");
   };
 
   const showModal = () => {

@@ -17,7 +17,7 @@ class ShoesController {
 
   async getAllShoes(req, res) {
     try {
-      const shoes = await Shoe.find();
+      const shoes = await Shoe.find().sort({ _id: -1 });
       const today = new Date();
 
       // Thêm logic tính giá giảm
@@ -403,7 +403,7 @@ class ShoesController {
       }
 
       // Fetch products based on filters
-      const products = await Shoe.find(filters);
+      const products = await Shoe.find(filters).sort({ _id: -1 });
 
       // Process discount prices for each product
       const today = new Date();

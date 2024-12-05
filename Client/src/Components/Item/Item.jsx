@@ -94,8 +94,8 @@ const ProductItem = ({ product, colors }) => {
     const queryParams = new URLSearchParams();
     queryParams.append("name", product.name);
     if (matchingColor) queryParams.append("color", matchingColor);
-
     navigate(`/product/${product.id}?${queryParams.toString()}`);
+    window.location.reload();
   };
 
   const formatNumber = (num) => new Intl.NumberFormat("vi-VN").format(num);
